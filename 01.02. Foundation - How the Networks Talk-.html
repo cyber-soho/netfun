@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 01 — Foundations: How Do the Networks Talk?</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fafaf9; 
+            color: #292524; 
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 380px;
+            }
+        }
+
+        .nav-item.active {
+            background-color: #e7e5e4;
+            border-left: 4px solid #0d9488;
+            color: #0f766e;
+            font-weight: 600;
+        }
+
+        .tab-btn.active {
+            border-bottom: 2px solid #0d9488;
+            color: #0f766e;
+        }
+        
+        .hide {
+            display: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden antialiased">
+
+<!-- Chosen Palette: Warm Neutrals with Teal Accents (Stone-50/100 for background, Stone-800 for text, Teal-600/700 for highlights and interactive elements) -->
+<!-- Application Structure Plan: The application is structured as an interactive learning module with a persistent side navigation and a dynamic main content area. This dashboard-like approach was chosen because educational content is best consumed in focused, logical chunks rather than a continuous scrolling wall of text. It allows students to easily jump between "Lectures" and "Exercises" at their own pace, mirroring the scheduled nature of the course. -->
+<!-- Visualization & Content Choices: 
+1. Core Concepts: Interactive definition builder -> Goal: Inform -> Method: Clickable HTML cards -> Justification: Breaks down the 3 ingredients of a network interactively.
+2. Network Scale: Interactive grid -> Goal: Organize/Relationships -> Method: Tailwind grid with hover states -> Justification: Shows nesting (PAN to WAN) without SVGs.
+3. Speed vs Capacity: Bar Chart -> Goal: Compare -> Method: Chart.js -> Justification: Visually demonstrates the difference between theoretical bandwidth and actual throughput.
+4. Getting Online: Tabbed Interface -> Goal: Inform -> Method: HTML/JS Tabs -> Justification: Segregates the 4 complex IP concepts into digestible bites. 
+Confirming NO SVG/Mermaid used. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <aside class="w-64 bg-white border-r border-stone-200 flex flex-col h-full shrink-0 z-10 shadow-sm transition-all duration-300 relative">
+        <div class="p-6 border-b border-stone-200 bg-stone-50">
+            <h1 class="text-xl font-bold text-stone-800 tracking-tight">Cyber.SoHo Hub</h1>
+            <p class="text-xs text-stone-500 mt-1 uppercase tracking-wider font-semibold">Networking Essentials</p>
+            <div class="mt-3 inline-block px-2 py-1 bg-teal-100 text-teal-800 text-xs font-bold rounded-md">Day 01</div>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-1 px-3">
+                <li><button onclick="nav('intro')" id="nav-intro" class="nav-item active w-full text-left px-4 py-3 rounded-md text-sm transition-colors hover:bg-stone-100">Welcome & Goals</button></li>
+                <div class="px-4 py-2 mt-4 text-xs font-bold text-stone-400 uppercase tracking-widest">Lecture 1</div>
+                <li><button onclick="nav('what-is-network')" id="nav-what-is-network" class="nav-item w-full text-left px-4 py-3 rounded-md text-sm transition-colors hover:bg-stone-100">What is a Network?</button></li>
+                <li><button onclick="nav('scale')" id="nav-scale" class="nav-item w-full text-left px-4 py-3 rounded-md text-sm transition-colors hover:bg-stone-100">Network Scales</button></li>
+                <li><button onclick="nav('speed')" id="nav-speed" class="nav-item w-full text-left px-4 py-3 rounded-md text-sm transition-colors hover:bg-stone-100">Speed & Capacity</button></li>
+                <div class="px-4 py-2 mt-4 text-xs font-bold text-stone-400 uppercase tracking-widest">Exercise 1</div>
+                <li><button onclick="nav('lab')" id="nav-lab" class="nav-item w-full text-left px-4 py-3 rounded-md text-sm transition-colors hover:bg-stone-100">Lab Tools Tour</button></li>
+                <div class="px-4 py-2 mt-4 text-xs font-bold text-stone-400 uppercase tracking-widest">Lecture 2</div>
+                <li><button onclick="nav('online')" id="nav-online" class="nav-item w-full text-left px-4 py-3 rounded-md text-sm transition-colors hover:bg-stone-100">Getting Online</button></li>
+                <li><button onclick="nav('docs')" id="nav-docs" class="nav-item w-full text-left px-4 py-3 rounded-md text-sm transition-colors hover:bg-stone-100">Documentation</button></li>
+                <div class="px-4 py-2 mt-4 text-xs font-bold text-stone-400 uppercase tracking-widest">Exercise 2</div>
+                <li><button onclick="nav('project')" id="nav-project" class="nav-item w-full text-left px-4 py-3 rounded-md text-sm transition-colors hover:bg-stone-100">Project: Acme SoHo</button></li>
+            </ul>
+        </nav>
+        
+        <div class="p-4 border-t border-stone-200 text-xs text-stone-400 text-center bg-stone-50">
+            © 2026 Cyber.SoHo<br>Building IT's Future, Today.
+        </div>
+    </aside>
+
+    <main class="flex-1 h-full overflow-y-auto bg-stone-50 scroll-smooth">
+        
+        <section id="sec-intro" class="section-content p-8 md:p-12 max-w-5xl mx-auto fade-in">
+            <header class="mb-10">
+                <h2 class="text-3xl md:text-5xl font-bold text-stone-900 mb-4 tracking-tight">Foundations: How Do the Networks Talk?</h2>
+                <p class="text-lg text-stone-600 border-l-4 border-teal-600 pl-4">Welcome to Day 1. Today, we start at zero. No prior knowledge required. This section introduces your goals and the schedule for our 4-hour foundational block.</p>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-100">
+                    <h3 class="text-xl font-semibold text-stone-800 mb-4 flex items-center">🎯 Why Day 1 Matters</h3>
+                    <ul class="space-y-3 text-stone-600">
+                        <li class="flex items-start"><span class="mr-2 text-teal-600">✓</span> You will leave today able to describe a network in plain English.</li>
+                        <li class="flex items-start"><span class="mr-2 text-teal-600">✓</span> You will have a working lab environment on your laptop.</li>
+                        <li class="flex items-start"><span class="mr-2 text-teal-600">✓</span> You will produce your first real engineering artifact — a 1-page network plan.</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-100">
+                    <h3 class="text-xl font-semibold text-stone-800 mb-4 flex items-center">🎓 Learning Outcomes</h3>
+                    <ul class="space-y-3 text-stone-600">
+                        <li class="flex items-start"><span class="mr-2 text-stone-400">1.</span> <strong>Define</strong> what a network is and what it carries.</li>
+                        <li class="flex items-start"><span class="mr-2 text-stone-400">2.</span> <strong>Distinguish</strong> PAN, LAN, MAN, WAN.</li>
+                        <li class="flex items-start"><span class="mr-2 text-stone-400">3.</span> <strong>Read</strong> common speed/capacity units (bps → Gbps).</li>
+                        <li class="flex items-start"><span class="mr-2 text-stone-400">4.</span> <strong>Run</strong> a basic lab on VirtualBox + GNS3.</li>
+                        <li class="flex items-start"><span class="mr-2 text-stone-400">5.</span> <strong>Plan</strong> a small office network on paper.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-teal-900 text-white p-8 rounded-2xl shadow-md">
+                <div class="md:flex justify-between items-center">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-2">Today's Schedule</h3>
+                        <p class="text-teal-200">A structured 4-hour journey plus home assignments.</p>
+                    </div>
+                    <div class="mt-4 md:mt-0 text-5xl opacity-50">⏱️</div>
+                </div>
+                <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-teal-800 p-4 rounded-xl border border-teal-700">
+                        <div class="text-xs text-teal-300 font-bold uppercase tracking-wider mb-1">1 Hour</div>
+                        <div class="font-semibold">Lecture 1</div>
+                        <div class="text-sm text-teal-100 mt-1">What is a network? Types & speed</div>
+                    </div>
+                    <div class="bg-teal-800 p-4 rounded-xl border border-teal-700">
+                        <div class="text-xs text-teal-300 font-bold uppercase tracking-wider mb-1">1 Hour</div>
+                        <div class="font-semibold">Exercise 1</div>
+                        <div class="text-sm text-teal-100 mt-1">Lab Tools Tour — install & verify</div>
+                    </div>
+                    <div class="bg-teal-800 p-4 rounded-xl border border-teal-700">
+                        <div class="text-xs text-teal-300 font-bold uppercase tracking-wider mb-1">1 Hour</div>
+                        <div class="font-semibold">Lecture 2</div>
+                        <div class="text-sm text-teal-100 mt-1">Getting online + documentation</div>
+                    </div>
+                    <div class="bg-teal-800 p-4 rounded-xl border border-teal-700">
+                        <div class="text-xs text-teal-300 font-bold uppercase tracking-wider mb-1">1 Hour</div>
+                        <div class="font-semibold">Exercise 2</div>
+                        <div class="text-sm text-teal-100 mt-1">Project Stage 1 — Acme SoHo</div>
+                    </div>
+                </div>
+                <div class="mt-4 text-sm text-teal-200 text-center italic">* Plus 1 hour home work per exercise for the report.</div>
+            </div>
+            
+            <div class="mt-8 text-center">
+                <button onclick="nav('what-is-network')" class="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 px-8 rounded-full transition-colors shadow-sm">Start Lecture 1 →</button>
+            </div>
+        </section>
+
+        <section id="sec-what-is-network" class="section-content p-8 md:p-12 max-w-5xl mx-auto hide">
+            <header class="mb-10">
+                <p class="text-sm font-bold text-stone-400 uppercase tracking-widest mb-2">Lecture 1</p>
+                <h2 class="text-3xl md:text-4xl font-bold text-stone-900 mb-4 tracking-tight">What Is a Network?</h2>
+                <p class="text-lg text-stone-600">This section breaks down the fundamental definition of a network. By interacting with the elements below, you will understand the three indispensable ingredients required to make digital communication possible.</p>
+            </header>
+
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-stone-200 mb-8 text-center">
+                <p class="text-xl md:text-2xl font-medium text-stone-700 italic">
+                    "A network is <strong class="text-teal-700">two or more devices</strong> connected by a <strong class="text-teal-700">medium</strong> that lets them exchange data using <strong class="text-teal-700">agreed rules</strong>."
+                </p>
+            </div>
+
+            <h3 class="text-xl font-bold text-stone-800 mb-6 text-center">Explore the Three Essential Ingredients</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white border border-stone-200 rounded-2xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer group" onclick="toggleDetails('det-devices')">
+                    <div class="bg-stone-100 p-6 text-center group-hover:bg-stone-200 transition-colors">
+                        <div class="text-4xl mb-3">💻</div>
+                        <h4 class="text-lg font-bold text-stone-800">1. Devices</h4>
+                        <p class="text-sm text-stone-500 mt-1">Endpoints & Intermediates</p>
+                    </div>
+                    <div id="det-devices" class="p-6 text-sm text-stone-600 hidden bg-white">
+                        <p class="mb-3"><strong>Endpoints</strong> (make the data): Laptop, phone, server, printer, IoT sensors.</p>
+                        <p><strong>Intermediate Devices</strong> (move the data): Switch, router, Access Point (AP), firewall, modem.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-stone-200 rounded-2xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer group" onclick="toggleDetails('det-medium')">
+                    <div class="bg-stone-100 p-6 text-center group-hover:bg-stone-200 transition-colors">
+                        <div class="text-4xl mb-3">🛜</div>
+                        <h4 class="text-lg font-bold text-stone-800">2. Medium</h4>
+                        <p class="text-sm text-stone-500 mt-1">The physical pathway</p>
+                    </div>
+                    <div id="det-medium" class="p-6 text-sm text-stone-600 hidden bg-white">
+                        <ul class="list-disc pl-4 space-y-2">
+                            <li><strong>Copper:</strong> twisted-pair (Ethernet), coaxial.</li>
+                            <li><strong>Fibre optics:</strong> pulses of light through glass.</li>
+                            <li><strong>Radio waves:</strong> Wi-Fi, Bluetooth, cellular.</li>
+                        </ul>
+                        <p class="mt-2 italic text-xs">All three carry the same logical data.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-stone-200 rounded-2xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer group" onclick="toggleDetails('det-rules')">
+                    <div class="bg-stone-100 p-6 text-center group-hover:bg-stone-200 transition-colors">
+                        <div class="text-4xl mb-3">📜</div>
+                        <h4 class="text-lg font-bold text-stone-800">3. Rules (Protocols)</h4>
+                        <p class="text-sm text-stone-500 mt-1">The grammar of the network</p>
+                    </div>
+                    <div id="det-rules" class="p-6 text-sm text-stone-600 hidden bg-white">
+                        <p class="mb-2">How devices take turns talking. Without protocols = digital chaos.</p>
+                        <p>Devices speak dozens of protocols simultaneously, each doing one job (addressing, error-checking).</p>
+                        <p class="mt-2 text-xs font-bold">Standardised by IETF, IEEE, ISO.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-10 bg-stone-800 text-stone-100 p-6 rounded-xl flex items-start">
+                <div class="text-3xl mr-4">🗝️</div>
+                <div>
+                    <h4 class="font-bold text-lg text-white mb-1">Key Takeaway</h4>
+                    <p class="text-stone-300">A network = <strong>devices + medium + rules</strong>. Strip any one of those three and you have <strong>no network</strong> — just hardware in a box.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-scale" class="section-content p-8 md:p-12 max-w-5xl mx-auto hide">
+            <header class="mb-10">
+                <p class="text-sm font-bold text-stone-400 uppercase tracking-widest mb-2">Lecture 1</p>
+                <h2 class="text-3xl md:text-4xl font-bold text-stone-900 mb-4 tracking-tight">Network Types & Scales</h2>
+                <p class="text-lg text-stone-600">This section explores how networks are categorized by their geographic reach. Discover how smaller networks act like Russian nesting dolls, plugging into larger ones to form the global internet.</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div class="space-y-4">
+                    <div class="bg-white border-2 border-stone-200 rounded-xl p-5 hover:border-teal-500 transition-colors cursor-default">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-xl font-bold text-stone-800 flex items-center"><span class="text-2xl mr-3">🎧</span> PAN</h3>
+                            <span class="bg-stone-100 text-stone-600 text-xs px-2 py-1 rounded font-bold">~1 meter</span>
+                        </div>
+                        <p class="text-stone-600 text-sm"><strong>Personal Area Network.</strong> Connecting immediate personal devices. Example: Phone ↔ earbuds (Bluetooth).</p>
+                    </div>
+                    
+                    <div class="bg-white border-2 border-stone-200 rounded-xl p-5 hover:border-teal-500 transition-colors cursor-default">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-xl font-bold text-stone-800 flex items-center"><span class="text-2xl mr-3">🏢</span> LAN</h3>
+                            <span class="bg-stone-100 text-stone-600 text-xs px-2 py-1 rounded font-bold">Building</span>
+                        </div>
+                        <p class="text-stone-600 text-sm"><strong>Local Area Network.</strong> The foundation of businesses and homes. Example: Home or office Wi-Fi & Ethernet.</p>
+                    </div>
+
+                    <div class="bg-white border-2 border-stone-200 rounded-xl p-5 hover:border-teal-500 transition-colors cursor-default">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-xl font-bold text-stone-800 flex items-center"><span class="text-2xl mr-3">🏙️</span> MAN</h3>
+                            <span class="bg-stone-100 text-stone-600 text-xs px-2 py-1 rounded font-bold">City</span>
+                        </div>
+                        <p class="text-stone-600 text-sm"><strong>Metropolitan Area Network.</strong> Bridging multiple buildings. Example: University Campus, ISP municipal fibre.</p>
+                    </div>
+
+                    <div class="bg-white border-2 border-stone-200 rounded-xl p-5 hover:border-teal-500 transition-colors cursor-default">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-xl font-bold text-stone-800 flex items-center"><span class="text-2xl mr-3">🌍</span> WAN</h3>
+                            <span class="bg-stone-100 text-stone-600 text-xs px-2 py-1 rounded font-bold">Globe</span>
+                        </div>
+                        <p class="text-stone-600 text-sm"><strong>Wide Area Network.</strong> Spanning countries and continents. Example: The internet itself.</p>
+                    </div>
+                </div>
+
+                <div class="bg-stone-800 rounded-2xl p-8 text-stone-300 font-mono text-sm overflow-x-auto shadow-lg">
+                    <h4 class="text-white font-sans font-bold text-lg mb-4 text-center">How They Nest</h4>
+                    <pre class="leading-relaxed text-teal-400 mx-auto w-max">
+┌────────── WAN (the internet) ──────────┐
+│                                        │
+│   ┌──── MAN (city / ISP) ─────┐        │
+│   │                           │        │
+│   │   ┌─ LAN (your office) ─┐ │        │
+│   │   │                     │ │        │
+│   │   │   ┌─ PAN (phone ─┐  │ │        │
+│   │   │   │  earbuds)    │  │ │        │
+│   │   │   └──────────────┘  │ │        │
+│   │   └─────────────────────┘ │        │
+│   └───────────────────────────┘        │
+└────────────────────────────────────────┘
+                    </pre>
+                    <p class="text-center mt-6 font-sans text-stone-400 italic">Smaller networks plug into larger ones.</p>
+                </div>
+            </div>
+
+            <div class="mt-8 bg-teal-50 border border-teal-100 p-6 rounded-xl">
+                <h4 class="font-bold text-teal-900 mb-2">Function-based Flavours</h4>
+                <p class="text-teal-800 text-sm mb-3">You will also hear terms based on <em>purpose</em> rather than size:</p>
+                <div class="flex flex-wrap gap-2">
+                    <span class="bg-white text-teal-800 text-xs px-3 py-1.5 rounded-full border border-teal-200 font-semibold">WLAN (Wireless LAN)</span>
+                    <span class="bg-white text-teal-800 text-xs px-3 py-1.5 rounded-full border border-teal-200 font-semibold">SAN (Storage Area Network)</span>
+                    <span class="bg-white text-teal-800 text-xs px-3 py-1.5 rounded-full border border-teal-200 font-semibold">CAN (Campus Area Network)</span>
+                    <span class="bg-white text-teal-800 text-xs px-3 py-1.5 rounded-full border border-teal-200 font-semibold">VPN (Virtual Private Network)</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-speed" class="section-content p-8 md:p-12 max-w-5xl mx-auto hide">
+            <header class="mb-10">
+                <p class="text-sm font-bold text-stone-400 uppercase tracking-widest mb-2">Lecture 1</p>
+                <h2 class="text-3xl md:text-4xl font-bold text-stone-900 mb-4 tracking-tight">Speed & Capacity</h2>
+                <p class="text-lg text-stone-600">This section clarifies the critical difference between theoretical capacity and actual user experience. Use the interactive chart to visualize the "Highway Analogy" and learn how to estimate real-world download times.</p>
+            </header>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 mb-10">
+                <div class="flex flex-col md:flex-row gap-8">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-stone-800 mb-4">The Highway Analogy</h3>
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-stone-50 border-b border-stone-200">
+                                    <th class="p-3 text-sm font-bold text-stone-700">Network Term</th>
+                                    <th class="p-3 text-sm font-bold text-stone-700">Highway Equivalent</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm">
+                                <tr class="border-b border-stone-100 hover:bg-stone-50">
+                                    <td class="p-3 font-semibold text-teal-700">Bandwidth</td>
+                                    <td class="p-3 text-stone-600">Number of lanes (Theoretical max)</td>
+                                </tr>
+                                <tr class="border-b border-stone-100 hover:bg-stone-50">
+                                    <td class="p-3 font-semibold text-teal-700">Throughput</td>
+                                    <td class="p-3 text-stone-600">Cars actually arriving per minute (Actual data)</td>
+                                </tr>
+                                <tr class="border-b border-stone-100 hover:bg-stone-50">
+                                    <td class="p-3 font-semibold text-teal-700">Latency</td>
+                                    <td class="p-3 text-stone-600">Travel time from on-ramp to exit (Delay)</td>
+                                </tr>
+                                <tr class="border-b border-stone-100 hover:bg-stone-50">
+                                    <td class="p-3 font-semibold text-teal-700">Jitter</td>
+                                    <td class="p-3 text-stone-600">Variation in arrival times</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-semibold text-teal-700">Packet Loss</td>
+                                    <td class="p-3 text-stone-600">Cars that crashed and never arrived</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="flex-1 bg-stone-50 rounded-xl p-4 border border-stone-100">
+                        <h4 class="text-center font-bold text-stone-700 mb-2 text-sm">Bandwidth vs Throughput (1 Gbps Link)</h4>
+                        <div class="chart-container">
+                            <canvas id="speedChart"></canvas>
+                        </div>
+                        <p class="text-xs text-center text-stone-500 mt-2">Due to protocol overhead and potential packet loss, Throughput is always lower than Bandwidth.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold text-stone-800 mb-4">Units of Capacity</h3>
+                    <div class="bg-white border border-stone-200 rounded-xl overflow-hidden shadow-sm">
+                        <div class="p-4 bg-teal-50 border-b border-teal-100">
+                            <p class="text-sm text-teal-800 font-medium">Bits vs Bytes — read the lowercase 'b'</p>
+                            <p class="text-xs text-teal-600 font-bold mt-1">8 bits = 1 Byte</p>
+                        </div>
+                        <ul class="divide-y divide-stone-100">
+                            <li class="p-3 flex justify-between items-center text-sm">
+                                <span class="font-bold text-stone-800">bps</span>
+                                <span class="text-stone-500">bits per second (base unit)</span>
+                            </li>
+                            <li class="p-3 flex justify-between items-center text-sm">
+                                <span class="font-bold text-stone-800">Kbps</span>
+                                <span class="text-stone-500">kilobits/s (10³)</span>
+                            </li>
+                            <li class="p-3 flex justify-between items-center text-sm">
+                                <span class="font-bold text-stone-800">Mbps</span>
+                                <span class="text-stone-500">megabits/s (10⁶)</span>
+                            </li>
+                            <li class="p-3 flex justify-between items-center text-sm">
+                                <span class="font-bold text-stone-800 text-teal-700">Gbps</span>
+                                <span class="text-stone-500">gigabits/s (10⁹) - Modern Standard</span>
+                            </li>
+                            <li class="p-3 flex justify-between items-center text-sm">
+                                <span class="font-bold text-stone-800">Tbps</span>
+                                <span class="text-stone-500">terabits/s (10¹²)</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-bold text-stone-800 mb-4">Speed Sanity Formula</h3>
+                    <div class="bg-stone-800 text-stone-100 p-6 rounded-xl shadow-sm h-full flex flex-col justify-center">
+                        <p class="text-sm text-stone-400 uppercase tracking-widest mb-2">Estimate Download Time</p>
+                        <div class="text-lg font-mono bg-stone-900 p-3 rounded-lg border border-stone-700 text-teal-400 text-center mb-6">
+                            Time(s) ≈ File(Mb) ÷ Throughput(Mbps)
+                        </div>
+                        <p class="text-sm font-bold mb-2">Quick Mental Check:</p>
+                        <ul class="text-sm text-stone-300 space-y-2 list-disc pl-5">
+                            <li>1 GB file = 8000 Mb</li>
+                            <li>On 100 Mbps connection → <strong>80s ideal</strong></li>
+                            <li>Reality (~50% overhead) → expect <strong>2 minutes</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-lab" class="section-content p-8 md:p-12 max-w-5xl mx-auto hide">
+            <header class="mb-10">
+                <p class="text-sm font-bold text-stone-400 uppercase tracking-widest mb-2">Exercise 1</p>
+                <h2 class="text-3xl md:text-4xl font-bold text-stone-900 mb-4 tracking-tight">Lab Tools Tour</h2>
+                <p class="text-lg text-stone-600">This section outlines the industry-standard toolkit you need to build your virtual networking lab for free. Follow the verification steps to prove your environment is ready for action.</p>
+            </header>
+
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-stone-200 mb-8">
+                <h3 class="text-xl font-bold text-stone-800 mb-4">Goal: Install & Verify Your Lab</h3>
+                <p class="text-stone-600 mb-6">You will install and prove-it-works for the following 5 components. This stack provides high industry credibility at €0 cost.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="bg-stone-50 p-4 rounded-xl border border-stone-200">
+                        <div class="font-bold text-stone-800 mb-1">1. NetAcad</div>
+                        <div class="text-xs text-stone-500">Cisco's free training portal + Packet Tracer.</div>
+                    </div>
+                    <div class="bg-stone-50 p-4 rounded-xl border border-stone-200">
+                        <div class="font-bold text-stone-800 mb-1">2. VT-x / AMD-V</div>
+                        <div class="text-xs text-stone-500">Virtualisation enabled in BIOS (Hardware requirement).</div>
+                    </div>
+                    <div class="bg-stone-50 p-4 rounded-xl border border-stone-200">
+                        <div class="font-bold text-stone-800 mb-1">3. VirtualBox</div>
+                        <div class="text-xs text-stone-500">Type-2 hypervisor (Free, cross-platform).</div>
+                    </div>
+                    <div class="bg-stone-50 p-4 rounded-xl border border-stone-200">
+                        <div class="font-bold text-stone-800 mb-1">4. GNS3 + VM</div>
+                        <div class="text-xs text-stone-500">Network simulator for real Cisco/Juniper images.</div>
+                    </div>
+                    <div class="bg-stone-50 p-4 rounded-xl border border-stone-200">
+                        <div class="font-bold text-stone-800 mb-1">5. CML Free</div>
+                        <div class="text-xs text-stone-500">Cisco Modeling Labs (5-node free tier).</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-teal-50 p-8 rounded-2xl border border-teal-100">
+                <h3 class="text-xl font-bold text-teal-900 mb-4 flex items-center">📝 Exercise 1 Deliverable</h3>
+                <p class="text-teal-800 mb-4">Your report must show screenshots proving setup success, detailed enough that a beginner could follow it:</p>
+                <ul class="space-y-3 text-teal-800 bg-white p-6 rounded-xl border border-teal-200 shadow-sm">
+                    <li class="flex items-center"><input type="checkbox" class="mr-3 w-5 h-5 accent-teal-600" disabled> Screenshot of NetAcad enrolment confirmation</li>
+                    <li class="flex items-center"><input type="checkbox" class="mr-3 w-5 h-5 accent-teal-600" disabled> BIOS screenshot proving VT-x / AMD-V is ON</li>
+                    <li class="flex items-center"><input type="checkbox" class="mr-3 w-5 h-5 accent-teal-600" disabled> VirtualBox launching a test VM</li>
+                    <li class="flex items-center"><input type="checkbox" class="mr-3 w-5 h-5 accent-teal-600" disabled> GNS3 + GNS3 VM green status indicator</li>
+                    <li class="flex items-center"><input type="checkbox" class="mr-3 w-5 h-5 accent-teal-600" disabled> Cisco CML Free login success page</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="sec-online" class="section-content p-8 md:p-12 max-w-5xl mx-auto hide">
+            <header class="mb-10">
+                <p class="text-sm font-bold text-stone-400 uppercase tracking-widest mb-2">Lecture 2</p>
+                <h2 class="text-3xl md:text-4xl font-bold text-stone-900 mb-4 tracking-tight">Getting Online</h2>
+                <p class="text-lg text-stone-600">This section details the mechanical requirements for a device to communicate on a network. Use the interactive tabs to explore the "Four Pieces" every device needs, and step through the automated DHCP handshake process.</p>
+            </header>
+
+            <h3 class="text-xl font-bold text-stone-800 mb-4">Four Pieces Every Device Needs</h3>
+            <p class="text-stone-600 mb-6 italic">Miss any one of these, and your users will complain: "I have Wi-Fi but no internet."</p>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden mb-12">
+                <div class="flex border-b border-stone-200 bg-stone-50 overflow-x-auto">
+                    <button onclick="switchTab('ip')" id="tab-ip" class="tab-btn active px-6 py-4 font-semibold text-sm whitespace-nowrap transition-colors">1. IP Address</button>
+                    <button onclick="switchTab('mask')" id="tab-mask" class="tab-btn px-6 py-4 font-semibold text-sm whitespace-nowrap text-stone-500 hover:text-stone-700 transition-colors">2. Subnet Mask</button>
+                    <button onclick="switchTab('gateway')" id="tab-gateway" class="tab-btn px-6 py-4 font-semibold text-sm whitespace-nowrap text-stone-500 hover:text-stone-700 transition-colors">3. Gateway</button>
+                    <button onclick="switchTab('dns')" id="tab-dns" class="tab-btn px-6 py-4 font-semibold text-sm whitespace-nowrap text-stone-500 hover:text-stone-700 transition-colors">4. DNS Server</button>
+                </div>
+                
+                <div class="p-8 min-h-[250px] relative">
+                    <div id="content-ip" class="tab-content fade-in">
+                        <div class="text-4xl mb-4">📍</div>
+                        <h4 class="text-2xl font-bold text-stone-800 mb-2">The Postal Address</h4>
+                        <p class="text-stone-600 mb-4">Its identity on the network. Without it, data doesn't know where to go.</p>
+                        <div class="bg-stone-50 rounded-lg p-4 grid grid-cols-2 gap-4 text-sm border border-stone-100">
+                            <div>
+                                <strong class="text-teal-700 block mb-1">IPv4 (Legacy but common)</strong>
+                                <span class="font-mono bg-stone-200 px-2 py-1 rounded">192.168.1.10</span>
+                                <p class="text-xs text-stone-500 mt-1">32 bits, ~4.3 billion total.</p>
+                            </div>
+                            <div>
+                                <strong class="text-teal-700 block mb-1">IPv6 (Future-proof)</strong>
+                                <span class="font-mono bg-stone-200 px-2 py-1 rounded">2001:db8::1</span>
+                                <p class="text-xs text-stone-500 mt-1">128 bits, ~3.4 × 10³⁸ total.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="content-mask" class="tab-content hide fade-in">
+                        <div class="text-4xl mb-4">🏘️</div>
+                        <h4 class="text-2xl font-bold text-stone-800 mb-2">The Neighbourhood Boundary</h4>
+                        <p class="text-stone-600 mb-4">Tells your device which IP addresses are local (talk directly) and which are remote (send via gateway).</p>
+                        <ul class="space-y-2 font-mono text-sm">
+                            <li class="bg-stone-50 p-2 rounded border border-stone-100 flex justify-between"><span>255.255.255.0 (/24)</span> <span class="text-stone-500">254 usable hosts</span></li>
+                            <li class="bg-stone-50 p-2 rounded border border-stone-100 flex justify-between"><span>255.255.0.0 (/16)</span> <span class="text-stone-500">65 534 hosts</span></li>
+                        </ul>
+                    </div>
+
+                    <div id="content-gateway" class="tab-content hide fade-in">
+                        <div class="text-4xl mb-4">🚪</div>
+                        <h4 class="text-2xl font-bold text-stone-800 mb-2">The Front Door</h4>
+                        <p class="text-stone-600 mb-4">The router's IP address on your subnet. Anything destined off-LAN travels through it.</p>
+                        <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded text-amber-800 text-sm">
+                            <strong>Warning:</strong> Without a gateway, the device is island-locked. It can print to the local printer, but cannot reach Google.
+                        </div>
+                    </div>
+
+                    <div id="content-dns" class="tab-content hide fade-in">
+                        <div class="text-4xl mb-4">📖</div>
+                        <h4 class="text-2xl font-bold text-stone-800 mb-2">The Internet Phonebook</h4>
+                        <p class="text-stone-600 mb-4">Translates human names (google.com) into machine IPs (142.250.190.46).</p>
+                        <div class="grid grid-cols-3 gap-3 text-center text-sm mt-4">
+                            <div class="bg-stone-50 p-3 rounded-lg border border-stone-200">
+                                <div class="font-bold text-stone-800">Cloudflare</div>
+                                <div class="font-mono text-teal-600 mt-1">1.1.1.1</div>
+                            </div>
+                            <div class="bg-stone-50 p-3 rounded-lg border border-stone-200">
+                                <div class="font-bold text-stone-800">Google</div>
+                                <div class="font-mono text-teal-600 mt-1">8.8.8.8</div>
+                            </div>
+                            <div class="bg-stone-50 p-3 rounded-lg border border-stone-200">
+                                <div class="font-bold text-stone-800">Quad9</div>
+                                <div class="font-mono text-teal-600 mt-1">9.9.9.9</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold text-stone-800 mb-4">How Devices Get the 4 Pieces</h3>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 h-full">
+                        <div class="flex justify-between items-center mb-4 pb-4 border-b border-stone-100">
+                            <div>
+                                <h4 class="font-bold text-teal-700">Static</h4>
+                                <p class="text-xs text-stone-500">Set by Human, manually</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="bg-stone-100 text-stone-600 text-xs px-2 py-1 rounded font-bold">Servers, Printers</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center mb-6 pb-4 border-b border-stone-100">
+                            <div>
+                                <h4 class="font-bold text-teal-700">DHCP (Dynamic)</h4>
+                                <p class="text-xs text-stone-500">Set by Router, automatically</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="bg-stone-100 text-stone-600 text-xs px-2 py-1 rounded font-bold">Laptops, Phones</span>
+                            </div>
+                        </div>
+                        <p class="text-sm text-stone-600 bg-stone-50 p-3 rounded text-center font-medium">Modern home/SoHo = <strong>DHCP</strong> for clients, <strong>static</strong> for infra.</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-bold text-stone-800 mb-4 flex justify-between items-center">
+                        The DHCP Handshake
+                        <span class="text-sm font-normal bg-teal-100 text-teal-800 px-2 py-1 rounded-md">D.O.R.A.</span>
+                    </h3>
+                    <div class="bg-stone-800 rounded-2xl shadow-sm p-6 text-stone-200 relative overflow-hidden h-full">
+                        <div class="space-y-4 relative z-10">
+                            <div class="flex items-start group hover:bg-stone-700 p-2 rounded transition-colors cursor-default">
+                                <div class="bg-teal-600 text-white font-bold w-8 h-8 rounded-full flex items-center justify-center shrink-0 mr-4">D</div>
+                                <div>
+                                    <h4 class="font-bold text-white">Discover <span class="text-xs font-normal text-stone-400 ml-2">Client → Broadcast</span></h4>
+                                    <p class="text-sm text-stone-400 mt-1 italic">"Anyone there? I need an IP."</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start group hover:bg-stone-700 p-2 rounded transition-colors cursor-default">
+                                <div class="bg-teal-600 text-white font-bold w-8 h-8 rounded-full flex items-center justify-center shrink-0 mr-4">O</div>
+                                <div>
+                                    <h4 class="font-bold text-white">Offer <span class="text-xs font-normal text-stone-400 ml-2">Server → Client</span></h4>
+                                    <p class="text-sm text-stone-400 mt-1 italic">"Here, take 192.168.1.42."</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start group hover:bg-stone-700 p-2 rounded transition-colors cursor-default">
+                                <div class="bg-teal-600 text-white font-bold w-8 h-8 rounded-full flex items-center justify-center shrink-0 mr-4">R</div>
+                                <div>
+                                    <h4 class="font-bold text-white">Request <span class="text-xs font-normal text-stone-400 ml-2">Client → Broadcast</span></h4>
+                                    <p class="text-sm text-stone-400 mt-1 italic">"Yes, I'll take it."</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start group hover:bg-stone-700 p-2 rounded transition-colors cursor-default">
+                                <div class="bg-teal-600 text-white font-bold w-8 h-8 rounded-full flex items-center justify-center shrink-0 mr-4">A</div>
+                                <div>
+                                    <h4 class="font-bold text-white">Acknowledge <span class="text-xs font-normal text-stone-400 ml-2">Server → Client</span></h4>
+                                    <p class="text-sm text-stone-400 mt-1 italic">"Confirmed — it's yours for 24h."</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-docs" class="section-content p-8 md:p-12 max-w-5xl mx-auto hide">
+            <header class="mb-10">
+                <p class="text-sm font-bold text-stone-400 uppercase tracking-widest mb-2">Lecture 2</p>
+                <h2 class="text-3xl md:text-4xl font-bold text-stone-900 mb-4 tracking-tight">Documentation</h2>
+                <p class="text-lg text-stone-600">This section covers the "Boring Superpower" of network engineering. Proper documentation separates juniors from seniors. Review the 5 essential artifacts required for every build.</p>
+            </header>
+
+            <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-xl mb-10 text-red-900">
+                <h3 class="text-lg font-bold mb-2">The Golden Rule</h3>
+                <p class="text-xl italic font-serif">"No diagram = no network. If it's not drawn and named, it does not exist on Monday morning when somebody calls in sick."</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                    <h3 class="text-xl font-bold text-stone-800 mb-4">Logical vs Physical</h3>
+                    <div class="space-y-4 text-sm text-stone-600">
+                        <div class="p-3 bg-stone-50 rounded border border-stone-100">
+                            <strong class="text-teal-700 block mb-1">Logical Diagram</strong>
+                            <p>Subnets, VLANs, routing. Audience: Engineers. "What talks to what". Stable across physical moves.</p>
+                        </div>
+                        <div class="p-3 bg-stone-50 rounded border border-stone-100">
+                            <strong class="text-teal-700 block mb-1">Physical Diagram</strong>
+                            <p>Cables, ports, racks. Audience: Technicians. "What plugs into what". Changes on every move.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                    <h3 class="text-xl font-bold text-stone-800 mb-4">Naming Conventions</h3>
+                    <p class="text-sm text-stone-600 mb-4 italic">Consistency > cleverness. Future-you needs to grep this.</p>
+                    <ul class="space-y-3 font-mono text-xs">
+                        <li class="bg-stone-800 text-stone-300 p-2 rounded"><span class="text-teal-400">Devices:</span> SITE-ROLE-NUMBER → MTL-SW-01</li>
+                        <li class="bg-stone-800 text-stone-300 p-2 rounded"><span class="text-teal-400">VLANs:</span> purpose-based → VLAN10_CORP</li>
+                        <li class="bg-stone-800 text-stone-300 p-2 rounded"><span class="text-teal-400">Files:</span> dated → topology_v1_2026-04-28.drawio</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 class="text-xl font-bold text-stone-800 mb-4">The Minimum Viable Network Doc Pack</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <div class="bg-teal-600 text-white p-4 rounded-xl shadow-md text-center flex flex-col justify-center">
+                    <div class="text-2xl mb-2">🗺️</div>
+                    <div class="font-bold text-sm">1. Logical</div>
+                    <div class="text-xs text-teal-100 mt-1 opacity-80">VLANs, IPs, Routes</div>
+                </div>
+                <div class="bg-teal-600 text-white p-4 rounded-xl shadow-md text-center flex flex-col justify-center">
+                    <div class="text-2xl mb-2">🔌</div>
+                    <div class="font-bold text-sm">2. Physical</div>
+                    <div class="text-xs text-teal-100 mt-1 opacity-80">Racks, Cables</div>
+                </div>
+                <div class="bg-teal-600 text-white p-4 rounded-xl shadow-md text-center flex flex-col justify-center">
+                    <div class="text-2xl mb-2">📋</div>
+                    <div class="font-bold text-sm">3. Inventory</div>
+                    <div class="text-xs text-teal-100 mt-1 opacity-80">Model, MAC, Location</div>
+                </div>
+                <div class="bg-teal-600 text-white p-4 rounded-xl shadow-md text-center flex flex-col justify-center">
+                    <div class="text-2xl mb-2">🔢</div>
+                    <div class="font-bold text-sm">4. IP Plan</div>
+                    <div class="text-xs text-teal-100 mt-1 opacity-80">Subnet allocation</div>
+                </div>
+                <div class="bg-teal-600 text-white p-4 rounded-xl shadow-md text-center flex flex-col justify-center">
+                    <div class="text-2xl mb-2">⏱️</div>
+                    <div class="font-bold text-sm">5. Change Log</div>
+                    <div class="text-xs text-teal-100 mt-1 opacity-80">Every mod, dated</div>
+                </div>
+            </div>
+            <p class="text-center text-sm text-stone-500 mt-4 italic">Skip any of these and future-you will hate present-you.</p>
+        </section>
+
+        <section id="sec-project" class="section-content p-8 md:p-12 max-w-5xl mx-auto hide">
+            <header class="mb-10">
+                <p class="text-sm font-bold text-stone-400 uppercase tracking-widest mb-2">Exercise 2</p>
+                <h2 class="text-3xl md:text-4xl font-bold text-stone-900 mb-4 tracking-tight">Project Stage 1: Acme SoHo</h2>
+                <p class="text-lg text-stone-600">This section presents your capstone project brief. You will act as a consultant for Acme SoHo over the next 6 days. Review the client requirements and your required deliverables for Stage 1.</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-stone-800 p-8 rounded-2xl shadow-lg text-white">
+                    <h3 class="text-2xl font-bold text-teal-400 mb-6 border-b border-stone-600 pb-3">The Brief</h3>
+                    <ul class="space-y-4 text-stone-300">
+                        <li class="flex items-start"><span class="text-teal-400 mr-3">▪</span> <strong>Client:</strong> 8-person consulting firm, moving in 4 weeks.</li>
+                        <li class="flex items-start"><span class="text-teal-400 mr-3">▪</span> <strong>Premises:</strong> 2-floor new office.</li>
+                        <li class="flex items-start"><span class="text-teal-400 mr-3">▪</span> <strong>Endpoints:</strong> Laptops, phones, NAS, MFP, video-conf TV, IoT.</li>
+                        <li class="flex items-start"><span class="text-teal-400 mr-3">▪</span> <strong>Uplink:</strong> 1 Gbps fibre internet.</li>
+                        <li class="flex items-start"><span class="text-teal-400 mr-3">▪</span> <strong>Wireless:</strong> 2 SSIDs required (corporate + guest).</li>
+                        <li class="flex items-start mt-4 bg-stone-900 p-4 rounded text-sm italic border-l-2 border-red-500 text-stone-400">
+                            "We deal with client financial data — do not embarrass me."
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                        <h3 class="text-xl font-bold text-stone-800 mb-3">Topology Must-Haves (Draw.io)</h3>
+                        <p class="text-sm text-stone-600 mb-3">Your first logical sketch must include:</p>
+                        <div class="flex flex-wrap gap-2 text-xs font-medium">
+                            <span class="bg-stone-100 text-stone-700 px-2 py-1 rounded">☁️ Internet Cloud</span>
+                            <span class="bg-stone-100 text-stone-700 px-2 py-1 rounded">🛡️ Edge Router/Firewall</span>
+                            <span class="bg-stone-100 text-stone-700 px-2 py-1 rounded">⚡ Core Switch</span>
+                            <span class="bg-stone-100 text-stone-700 px-2 py-1 rounded">🔌 2x Access Switches</span>
+                            <span class="bg-stone-100 text-stone-700 px-2 py-1 rounded">📡 2x Access Points</span>
+                            <span class="bg-stone-100 text-stone-700 px-2 py-1 rounded">💻 Endpoints (Laptops, NAS, etc)</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                        <h3 class="text-xl font-bold text-stone-800 mb-3">VLAN Segmentation Plan</h3>
+                        <p class="text-sm text-stone-600 mb-3">Use 4 distinct colours in your diagram for these networks:</p>
+                        <table class="w-full text-sm text-left">
+                            <tr class="border-b border-stone-100"><th class="py-2 text-teal-700">ID</th><th class="py-2">Name</th><th class="py-2 text-stone-500">Purpose</th></tr>
+                            <tr class="border-b border-stone-100"><td class="py-2 font-mono">10</td><td class="py-2 font-bold">Corporate</td><td class="py-2 text-stone-500 text-xs">Laptops, corp phones</td></tr>
+                            <tr class="border-b border-stone-100"><td class="py-2 font-mono">20</td><td class="py-2 font-bold">Servers</td><td class="py-2 text-stone-500 text-xs">NAS, MFP, TV</td></tr>
+                            <tr class="border-b border-stone-100"><td class="py-2 font-mono">30</td><td class="py-2 font-bold">Guest</td><td class="py-2 text-stone-500 text-xs">Isolated Wi-Fi</td></tr>
+                            <tr><td class="py-2 font-mono">40</td><td class="py-2 font-bold">IoT</td><td class="py-2 text-stone-500 text-xs">Locks, sensors</td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-teal-50 border border-teal-200 rounded-xl p-6 text-center">
+                <h3 class="font-bold text-teal-900 mb-2">Stage 1 Deliverables</h3>
+                <p class="text-teal-800 text-sm mb-4">You must submit the following artifacts to the hub portal:</p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4 text-sm font-mono text-stone-700">
+                    <span class="bg-white px-4 py-2 rounded shadow-sm border border-teal-100">Acme_SoHo_Requirements_v1.md</span>
+                    <span class="bg-white px-4 py-2 rounded shadow-sm border border-teal-100">Acme_SoHo_Topology_v1.drawio</span>
+                </div>
+                <p class="text-xs text-teal-600 mt-4 uppercase font-bold tracking-widest">End of Day 01</p>
+            </div>
+            
+            <div class="mt-12 mb-8 bg-stone-100 p-6 rounded-lg text-sm text-stone-500 text-center border border-stone-200">
+                <strong class="text-stone-700 block mb-1">Ethics & Liability Reminder for Tomorrow</strong>
+                All labs only on systems you own. Never scan public networks. Cyber.SoHo accepts no liability. When in doubt, do not run it.
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        // -- Core Interaction & Navigation Handling --
+        function nav(sectionId) {
+            document.querySelectorAll('.section-content').forEach(el => {
+                el.classList.add('hide');
+                el.classList.remove('fade-in');
+            });
+            
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            
+            const targetSec = document.getElementById('sec-' + sectionId);
+            if(targetSec) {
+                targetSec.classList.remove('hide');
+                targetSec.classList.add('fade-in');
+            }
+            
+            const targetNav = document.getElementById('nav-' + sectionId);
+            if(targetNav) targetNav.classList.add('active');
+
+            document.querySelector('main').scrollTo(0, 0);
+
+            if(sectionId === 'speed' && !window.speedChartRendered) {
+                renderSpeedChart();
+                window.speedChartRendered = true;
+            }
+        }
+
+        function toggleDetails(id) {
+            const el = document.getElementById(id);
+            if(el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                el.classList.add('fade-in');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'border-teal-600', 'text-teal-700');
+                btn.classList.add('text-stone-500', 'border-transparent');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hide');
+                content.classList.remove('fade-in');
+            });
+
+            const activeBtn = document.getElementById('tab-' + tabId);
+            activeBtn.classList.add('active');
+            activeBtn.classList.remove('text-stone-500', 'border-transparent');
+            
+            const activeContent = document.getElementById('content-' + tabId);
+            activeContent.classList.remove('hide');
+            activeContent.classList.add('fade-in');
+        }
+
+        // -- Chart.js Logic (Speed vs Capacity) --
+        function renderSpeedChart() {
+            const ctx = document.getElementById('speedChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Bandwidth (Pipe Size)', 'Throughput (Actual Delivery)'],
+                    datasets: [{
+                        label: 'Speed (Mbps)',
+                        data: [1000, 650], 
+                        backgroundColor: [
+                            'rgba(214, 211, 209, 0.6)', 
+                            'rgba(13, 148, 136, 0.8)'  
+                        ],
+                        borderColor: [
+                            'rgba(168, 162, 158, 1)',
+                            'rgba(15, 118, 110, 1)'
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, 
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y + ' Mbps';
+                                },
+                                afterLabel: function(context) {
+                                    if(context.dataIndex === 0) return 'Theoretical Maximum';
+                                    if(context.dataIndex === 1) return 'Minus protocol overhead & latency';
+                                    return '';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1100,
+                            title: {
+                                display: true,
+                                text: 'Megabits per second (Mbps)',
+                                color: '#78716c',
+                                font: { size: 11 }
+                            },
+                            grid: { color: '#f5f5f4' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#44403c', font: { weight: 'bold' } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Init
+        window.speedChartRendered = false;
+        nav('intro');
+    </script>
+</body>
+</html>
+
+
+
