@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Day 02 — Foundations: Cabling, Standards & Reference Models | Cyber.SoHo</title>
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: '#008b8b',
+                        'brand-dark': '#006d6d',
+                        stone: {
+                            50: '#fafaf9',
+                            100: '#f5f5f4',
+                            200: '#e7e5e4',
+                            300: '#d6d3d1',
+                            400: '#a8a29e',
+                            500: '#78716c',
+                            600: '#57534e',
+                            700: '#44403c',
+                            800: '#292524',
+                            900: '#1c1917',
+                        },
+                        utp: '#2ec27e',
+                        stp: '#f5a524',
+                        fiber: '#2b6cff',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --brand: #008b8b;
+            --brand-dark: #006d6d;
+            --sidebar-w: 270px;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #f4f7fa;
+            color: #1a2330;
+            line-height: 1.7;
+        }
+        .sidebar {
+            width: var(--sidebar-w);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 40;
+            background: #1c1917;
+            color: #d6d3d1;
+            transition: transform 0.3s ease;
+            padding-bottom: 2rem;
+        }
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+        .sidebar a {
+            display: block;
+            padding: 0.45rem 1rem;
+            font-size: 0.875rem;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+            color: #a8a29e;
+            text-decoration: none;
+        }
+        .sidebar a:hover,
+        .sidebar a.active {
+            color: #fff;
+            border-left-color: var(--brand);
+            background: rgba(0, 139, 139, 0.12);
+        }
+        .sidebar h3 {
+            color: #e7e5e4;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 1rem 1rem 0.4rem;
+            margin: 0;
+        }
+        .main-content {
+            margin-left: var(--sidebar-w);
+            transition: margin-left 0.3s ease;
+            min-height: 100vh;
+        }
+        .main-content.expanded {
+            margin-left: 0;
+        }
+        .hamburger {
+            position: fixed;
+            top: 0.75rem;
+            left: 0.75rem;
+            z-index: 50;
+            background: #1c1917;
+            color: #fff;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+            font-size: 1.25rem;
+            display: none;
+        }
+        @media(max-width:1023px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0 !important;
+            }
+            .hamburger {
+                display: block;
+            }
+        }
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .06);
+            margin-bottom: 1.5rem;
+        }
+        .card h2 {
+            color: var(--brand);
+            margin-top: 0;
+        }
+        .accordion-toggle {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            font-weight: 700;
+            font-size: 1.05rem;
+            padding: 0.75rem 0;
+            color: #1a2330;
+        }
+        .accordion-toggle .icon {
+            transition: transform 0.3s;
+            font-size: 1.2rem;
+            color: var(--brand);
+        }
+        .accordion-toggle.open .icon {
+            transform: rotate(180deg);
+        }
+        .accordion-body {
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+            max-height: 0;
+        }
+        .accordion-body.open {
+            max-height: 2000px;
+        }
+        .ascii-diagram {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            line-height: 1.25;
+            overflow-x: auto;
+            white-space: pre;
+            margin: 1rem 0;
+        }
+        @keyframes pulse-green {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(46, 194, 126, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 0 12px rgba(46, 194, 126, 0);
+            }
+        }
+        .pulse-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #2ec27e;
+            display: inline-block;
+            animation: pulse-green 2s infinite;
+            margin-right: 6px;
+        }
+        .quiz-option {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 0.65rem 1rem;
+            margin: 0.3rem 0;
+            border: 2px solid #e7e5e4;
+            border-radius: 8px;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .quiz-option:hover {
+            border-color: var(--brand);
+            background: #f0fafa;
+        }
+        .quiz-option.correct {
+            border-color: #2ec27e !important;
+            background: #e6f7ee !important;
+        }
+        .quiz-option.wrong {
+            border-color: #e04040 !important;
+            background: #fff0f0 !important;
+        }
+        .progress-bar {
+            height: 5px;
+            background: #e7e5e4;
+            border-radius: 10px;
+            overflow: hidden;
+            position: sticky;
+            top: 0;
+            z-index: 30;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--brand);
+            transition: width 0.4s ease;
+            border-radius: 10px;
+        }
+        iframe.demo-frame {
+            width: 100%;
+            height: 380px;
+            border: 1px solid #e7e5e4;
+            border-radius: 10px;
+            background: #fff;
+        }
+        .tab-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            color: #78716c;
+        }
+        .tab-btn.active {
+            color: var(--brand);
+            border-bottom-color: var(--brand);
+        }
+        pre.code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+        .tooltip {
+            position: relative;
+            cursor: help;
+            border-bottom: 1px dotted var(--brand);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HAMBURGER -->
+    <button class="hamburger" id="hamburger" aria-label="Toggle sidebar">☰</button>
+
+    <!-- PROGRESS BAR -->
+    <div class="progress-bar" style="position:sticky;top:0;z-index:30;">
+        <div class="progress-fill" id="progressFill" style="width:0%;"></div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+        <div style="padding:1.5rem 1rem 1rem;text-align:center;">
+            <span style="font-size:1.3rem;font-weight:800;color:#fff;">🛡️ Cyber.SoHo</span>
+            <p style="font-size:0.7rem;color:#a8a29e;margin-top:4px;">Day 02 — Cabling & Standards</p>
+        </div>
+        <h3>📋 Overview</h3>
+        <a href="#schedule">⏰ Today's Schedule</a>
+        <a href="#intro">🚀 Welcome & Objectives</a>
+        <h3>📘 Lecture 1</h3>
+        <a href="#lec1-1">🔌 1.1 Network Cables</a>
+        <a href="#lec1-2">📊 1.2 Twisted-Pair Categories</a>
+        <a href="#lec1-3">⚡ 1.3 Speed & Capacity</a>
+        <a href="#quiz1">📝 Lecture 1 Quiz</a>
+        <h3>🛠️ Exercise 1</h3>
+        <a href="#ex1-gns3">🖥️ GNS3 Deep Dive</a>
+        <a href="#ex1-vbox">📦 VirtualBox Deep Dive</a>
+        <h3>📘 Lecture 2</h3>
+        <a href="#lec2-1">🏛️ 2.1 Standards & Bodies</a>
+        <a href="#lec2-2">🗼 2.2 OSI 7-Layer Model</a>
+        <a href="#lec2-3">🌐 2.3 TCP/IP Model</a>
+        <a href="#lec2-4">🔀 2.4 Hybrid Model</a>
+        <a href="#quiz2">📝 Lecture 2 Quiz</a>
+        <h3>🛠️ Exercise 2</h3>
+        <a href="#ex2">🏗️ Build the Topology</a>
+        <h3>📚</h3>
+        <a href="#references">🔗 References & Links</a>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content" id="mainContent">
+        <div class="max-w-4xl mx-auto px-4 py-6">
+
+            <!-- HEADER -->
+            <header class="card text-center" id="schedule">
+                <h1 style="font-size:2rem;margin-bottom:0.25rem;">Day 02 — Foundations: Cabling, Standards & Reference Models</h1>
+                <p style="color:#78716c;"><strong>Course:</strong> Basics of Computer Networks | <strong>Session:</strong> Day 02 of 6 — Thursday, April 30, 2026 | <strong>Total Contact Time:</strong> 4 hours</p>
+                <p style="color:var(--brand);font-weight:600;">Cyber.SoHo Educational Hub — <em>From the Industry to the Classroom</em></p>
+                <button onclick="toggleSchedule()" style="margin-top:0.5rem;background:var(--brand);color:#fff;border:none;padding:0.4rem 1rem;border-radius:6px;cursor:pointer;">Toggle Schedule Details</button>
+                <div id="scheduleDetail" style="display:none;margin-top:1rem;text-align:left;">
+                    <table style="width:100%;border-collapse:collapse;">
+                        <tr><td style="padding:0.3rem;font-weight:700;">🕐 Lecture 1</td><td>Cables, Categories, and Capacity — 1 hour</td></tr>
+                        <tr><td style="padding:0.3rem;font-weight:700;">🕑 Exercise 1</td><td>GNS3 & VirtualBox Deep Dive — 1 hour</td></tr>
+                        <tr><td style="padding:0.3rem;font-weight:700;">🕒 Lecture 2</td><td>Standards, Bodies & OSI vs TCP/IP — 1 hour</td></tr>
+                        <tr><td style="padding:0.3rem;font-weight:700;">🕓 Exercise 2</td><td>Build the Topology — 1 hour</td></tr>
+                    </table>
+                </div>
+            </header>
+
+            <!-- INTRO -->
+            <section class="card" id="intro">
+                <h2>🚀 Welcome Back, Network Builders!</h2>
+                <p>Yesterday on <strong>Day 01</strong>, you saw what a network <em>is</em>. Today, you'll learn what it's <strong>physically made of</strong>, and the <strong>rulebook</strong> every device on Earth has agreed to follow so they can actually talk to one another.</p>
+                <p>Think of yesterday as <em>"there's a city full of houses."</em> Today is <em>"how the roads are paved, which side of the road we drive on, and what shape the road signs take."</em></p>
+                <div style="background:#fff7e0;border-left:4px solid #f5a524;padding:1rem;border-radius:6px;margin-top:1rem;">
+                    <strong>By the end of today's session, you will:</strong>
+                    <ol style="margin:0.5rem 0 0 1.2rem;">
+                        <li>Tell <strong>copper</strong> from <strong>fiber</strong> at a glance — and explain <em>why</em> a hospital might pay 8× more for fiber.</li>
+                        <li>Read a <strong>Cat 6a</strong> label and know exactly what speed it can carry.</li>
+                        <li>Build a tiny network in <strong>GNS3</strong> and inside <strong>Oracle VirtualBox</strong>.</li>
+                        <li>Argue intelligently at a job interview about <strong>OSI</strong> vs <strong>TCP/IP</strong> without sweating.</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- ==================== LECTURE 1 ==================== -->
+            <section id="lec1">
+                <div class="card">
+                    <h2>📘 Lecture 1 — Cables, Categories, and Capacity (1 hour)</h2>
+                    <p style="font-style:italic;">"Every packet you've ever sent — every TikTok, every Zoom, every login — has, at some point, been a tiny pulse of light or a wiggle of electrons in a copper wire. The Internet is shockingly physical."</p>
+                </div>
+
+                <!-- 1.1 -->
+                <div class="card" id="lec1-1">
+                    <h3>1.1 — Network Cables: Copper, Glass, and the Physics In Between</h3>
+                    <p>A network cable is a <strong>carrier of changes</strong>. It transports <em>changes in voltage</em> (copper) or <em>changes in light intensity</em> (fiber). Your NIC wiggles those changes very fast, and the receiver reconstructs the original 1s and 0s.</p>
+
+                    <!-- Accordion: Cable Families -->
+                    <button class="accordion-toggle open" onclick="toggleAccordion(this)">🔌 1. Twisted-Pair Copper (the workhorse) <span class="icon">▼</span></button>
+                    <div class="accordion-body open">
+                        <p>Two insulated copper wires <strong>twisted around each other</strong> in pairs, bundled (usually 4 pairs / 8 wires) inside a single jacket terminated with an <strong>RJ-45</strong> plug. The twist is the magic: <strong>differential signaling</strong> cancels noise.</p>
+                        <ul style="list-style:disc;padding-left:1.5rem;">
+                            <li><strong>UTP</strong> (Unshielded) — cheap, flexible, used everywhere.</li>
+                            <li><strong>STP</strong> (Shielded) — metal foil/braid; for hospitals, factories, near EMI sources.</li>
+                        </ul>
+                    </div>
+
+                    <button class="accordion-toggle" onclick="toggleAccordion(this)">📺 2. Coaxial ("Coax") <span class="icon">▼</span></button>
+                    <div class="accordion-body">
+                        <p>A single solid copper conductor surrounded by insulation, then a metal mesh shield. Was king in the 1980s (10BASE2, 10BASE5). Today, mostly in cable-Internet drops and some broadcast/telecom links.</p>
+                    </div>
+
+                    <button class="accordion-toggle" onclick="toggleAccordion(this)">💡 3. Fiber-Optic (the speed champion) <span class="icon">▼</span></button>
+                    <div class="accordion-body">
+                        <p>A hair-thin strand of ultra-pure <strong>glass</strong> carrying <strong>pulses of laser or LED light</strong>.</p>
+                        <ul style="list-style:disc;padding-left:1.5rem;">
+                            <li><strong>Immune to EMI</strong> — lightning, motors, fluorescent lights don't affect it.</li>
+                            <li><strong>Fast</strong> — modern single-mode fiber does 100 Gbps; lab demos hit 22 Tbps.</li>
+                            <li><strong>SMF</strong> (Single-Mode) — tiny core (~9 µm), laser, works over <em>kilometers</em>.</li>
+                            <li><strong>MMF</strong> (Multi-Mode) — fatter core (~50/62.5 µm), cheaper LEDs, works over <em>hundreds of meters</em>.</li>
+                        </ul>
+                    </div>
+
+                    <!-- ICU Decision Tree -->
+                    <h4 style="margin-top:1.5rem;">🌍 Real-Life Example #1 — The Hospital ICU Cable Choice</h4>
+                    <div class="ascii-diagram">
+┌─────────────────────────────┐
+│   "Where does this cable    │
+│    physically run?"         │
+└──────────────┬──────────────┘
+               │
+   ┌───────────┼───────────┐
+   ▼           ▼           ▼
+┌─────────┐ ┌─────────┐ ┌───────────┐
+│Past MRI │ │Office   │ │Inside MRI │
+│control  │ │corridor │ │room /     │
+│room,    │ │no motors│ │high-field │
+│quiet,   │ │&lt;100 m │ │magnets    │
+│&lt;100 m │ │         │ │           │
+└────┬────┘ └────┬────┘ └─────┬─────┘
+     ▼           ▼           ▼
+┌─────────┐ ┌─────────┐ ┌───────────┐
+│✅ UTP   │ │✅ UTP   │ │✅ FIBER   │
+│Cat 6a   │ │Cat 6    │ │(OM4)      │
+│Cheap,   │ │Cheap,   │ │Glass =    │
+│fine,    │ │plenty   │ │immune to  │
+│EMI low  │ │for 1Gbps│ │magnets/EMI│
+└─────────┘ └─────────┘ └───────────┘
+PRINCIPLE: Match cable to EMI environment, not budget.
+                    </div>
+
+                    <!-- Live Cable Chooser Demo -->
+                    <h4 style="margin-top:1.5rem;">💻 Interactive: ICU Cable Chooser</h4>
+                    <p>Try the live tool below — enter a run length and EMI level to get a cable recommendation:</p>
+                    <iframe class="demo-frame" srcdoc="
+<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Cable Chooser</title><style>
+body{font-family:system-ui,sans-serif;max-width:500px;margin:1rem auto;padding:1rem;background:#f4f7fa;color:#1a2330;}
+.card{background:#fff;border-radius:10px;padding:1.25rem;box-shadow:0 4px 12px rgba(0,0,0,.08);}
+h1{color:#008b8b;font-size:1.3rem;}label{display:block;margin:0.75rem 0 .2rem;font-weight:600;}
+input,select{width:100%;padding:.5rem;font-size:1rem;border:1px solid #ccd;border-radius:6px;}
+#verdict{margin-top:1rem;padding:.75rem;border-radius:8px;display:none;}
+.utp{background:#e6f7ee;border-left:4px solid #2ec27e;}
+.stp{background:#fff7e0;border-left:4px solid #f5a524;}
+.fiber{background:#e6f0ff;border-left:4px solid #2b6cff;}
+button{margin-top:1rem;background:#008b8b;color:#fff;border:none;padding:.6rem 1rem;border-radius:6px;cursor:pointer;font-size:1rem;}
+button:hover{background:#006d6d;}
+</style></head><body><div class='card'><h1>🏥 ICU Cable Chooser</h1><p>Enter cable-run length and EMI environment:</p>
+<label for='length'>Run length (meters):</label><input id='length' type='number' min='1' max='2000' value='60'>
+<label for='emi'>EMI environment:</label><select id='emi'><option value='low'>Low — quiet office</option><option value='medium'>Medium — corridor near elevators</option><option value='high'>High — inside MRI room</option></select>
+<button onclick='choose()'>Recommend a cable</button><div id='verdict'></div></div>
+<script>function choose(){const len=parseInt(document.getElementById('length').value,10);const emi=document.getElementById('emi').value;const v=document.getElementById('verdict');let cssClass,html;if(emi==='high'||len>100){cssClass='fiber';html='<strong>✅ Recommendation: FIBER (OM4 multi-mode)</strong><br>Glass is immune to EMI and runs far beyond copper\'s 100 m limit.';}else if(emi==='medium'){cssClass='stp';html='<strong>✅ Recommendation: STP Cat 6a</strong><br>Shielding tames moderate EMI. Cheaper than fiber for ≤ 100 m.';}else{cssClass='utp';html='<strong>✅ Recommendation: UTP Cat 6 / 6a</strong><br>Quiet environment + short run = no need to pay for shielding.';}v.className='';v.classList.add(cssClass);v.innerHTML=html;v.style.display='block';}
+</script></body></html>
+                    " title="ICU Cable Chooser"></iframe>
+                </div>
+
+                <!-- 1.2 -->
+                <div class="card" id="lec1-2">
+                    <h3>1.2 — Twisted-Pair Categories at a Glance</h3>
+                    <p>99% of the cables you'll touch as a junior admin will be <strong>Cat-something</strong>. Here's what the "Cat" number actually buys you:</p>
+
+                    <!-- Cable Categories Table + Chart -->
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+                            <thead><tr style="background:#f0fafa;"><th>Category</th><th>Max Speed</th><th>Max Bandwidth</th><th>Max Distance</th><th>Typical Use</th><th>Notes</th></tr></thead>
+                            <tbody>
+                                <tr><td>Cat 5</td><td>100 Mbps</td><td>100 MHz</td><td>100 m</td><td>Old offices</td><td>❌ Avoid for new installs</td></tr>
+                                <tr><td>Cat 5e</td><td>1 Gbps</td><td>100 MHz</td><td>100 m</td><td>Most homes</td><td>"e" = enhanced; fine for 1 Gbps</td></tr>
+                                <tr><td>Cat 6</td><td>1 Gbps (10 Gbps ≤ 55 m)</td><td>250 MHz</td><td>100 m</td><td>New offices</td><td>Current "default"</td></tr>
+                                <tr><td>Cat 6a</td><td>10 Gbps</td><td>500 MHz</td><td>100 m</td><td>Healthcare, finance</td><td>"a" = augmented</td></tr>
+                                <tr><td>Cat 7</td><td>10 Gbps</td><td>600 MHz</td><td>100 m</td><td>Niche</td><td>Not TIA-ratified; often skipped</td></tr>
+                                <tr><td>Cat 8</td><td>25/40 Gbps</td><td>2000 MHz</td><td><strong>30 m</strong></td><td>Data-center top-of-rack</td><td>Short on purpose</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Chart.js: Cable Speed Comparison -->
+                    <canvas id="cableChart" style="max-height:300px;margin-top:1.5rem;"></canvas>
+
+                    <div style="background:#fff7e0;border-left:4px solid #f5a524;padding:1rem;border-radius:6px;margin:1rem 0;">
+                        <strong>🎓 The 100-meter rule.</strong> Almost every category caps at <strong>100 m end-to-end</strong> (90 m horizontal + two ~5 m patch cables). At higher frequencies, copper signals attenuate and the NIC can't tell 1s from 0s reliably. Cat 8 uses such high frequencies it can only hold the line for <strong>30 m</strong>.
+                    </div>
+
+                    <h4>🔀 T568A vs T568B Pinouts</h4>
+                    <p>The 8 wires inside an RJ-45 plug come in 4 pairs (orange, green, blue, brown). TIA-568 defines two color orderings. They both work as long as <strong>both ends use the same one</strong>. If one end is A and the other is B, you've made a <strong>crossover cable</strong>.</p>
+
+                    <!-- Real-Life Example #2 -->
+                    <h4 style="margin-top:1.5rem;">🌍 Real-Life Example #2 — Why the New Office Won't Stream 4K</h4>
+                    <div class="ascii-diagram">
+PC NIC        Wall Cat-5        Patch Panel       Switch          Internet
+(1 Gbps)─────[ 100 Mbps cap ]──────(─patched─)─────(1 Gbps)─────(1 Gbps)
+                        ▲
+                        │
+                THE BOTTLENECK
+Cable category dictates the slowest link — and that wins.
+                    </div>
+
+                    <!-- Live Bandwidth Bottleneck Demo -->
+                    <h4 style="margin-top:1.5rem;">💻 Interactive: Bandwidth Bottleneck Visualiser</h4>
+                    <iframe class="demo-frame" srcdoc="
+<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Bottleneck</title><style>
+body{font-family:system-ui,sans-serif;max-width:600px;margin:1rem auto;padding:1rem;background:#f4f7fa;color:#1a2330;}
+.card{background:#fff;padding:1.25rem;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.08);}
+h1{color:#008b8b;font-size:1.2rem;}.link-row{display:flex;gap:.4rem;align-items:center;margin:.4rem 0;}
+.link-row input{width:100px;padding:.3rem;}#result{margin-top:1rem;padding:.75rem;background:#fff7e0;border-left:4px solid #f5a524;border-radius:6px;}
+button{background:#008b8b;color:#fff;border:0;padding:.4rem .8rem;border-radius:6px;cursor:pointer;margin-right:.4rem;font-size:.9rem;}
+button:hover{background:#006d6d;}
+</style></head><body><div class='card'><h1>📉 Bandwidth Bottleneck Visualiser</h1><p>Enter speed of each link (Mbps). End-to-end speed = slowest link.</p>
+<div id='links'><div class='link-row'><label>Link 1 (NIC):</label><input type='number' value='1000' min='1'></div><div class='link-row'><label>Link 2 (wall cable):</label><input type='number' value='100' min='1'></div><div class='link-row'><label>Link 3 (switch):</label><input type='number' value='1000' min='1'></div></div>
+<button onclick='addLink()'>+ Add link</button><button onclick='compute()'>Calculate</button><div id='result'>Click <em>Calculate</em> to see your bottleneck.</div></div>
+<script>let nextLink=4;function addLink(){const wrap=document.getElementById('links');const row=document.createElement('div');row.className='link-row';row.innerHTML='<label>Link '+nextLink+' (custom):</label><input type=\'number\' value=\'1000\' min=\'1\'>';wrap.appendChild(row);nextLink++;}
+function compute(){const inputs=document.querySelectorAll('#links input');const speeds=Array.from(inputs).map(i=>Number(i.value));const bottleneck=Math.min(...speeds);const mBps=bottleneck/8;const seconds=(1024/mBps).toFixed(1);document.getElementById('result').innerHTML='<strong>Bottleneck:</strong> '+bottleneck+' Mbps<br><strong>Effective transfer rate:</strong> '+mBps.toFixed(1)+' MB/s<br><strong>Time for 1 GB file:</strong> '+seconds+' seconds<br><em>The chain is only as fast as the slowest link.</em>';}
+</script></body></html>
+                    " title="Bandwidth Bottleneck Visualiser"></iframe>
+                </div>
+
+                <!-- 1.3 -->
+                <div class="card" id="lec1-3">
+                    <h3>1.3 — Speed and Capacity in Plain Language</h3>
+                    <h4>🚿 The Pipe Analogy</h4>
+                    <ul style="list-style:disc;padding-left:1.5rem;">
+                        <li><strong>Bandwidth</strong> = how <em>wide</em> the pipe is (theoretical max). Measured in Hz or bps.</li>
+                        <li><strong>Throughput</strong> = how much water <em>actually</em> gets through right now. Always ≤ bandwidth.</li>
+                        <li><strong>Goodput</strong> = useful payload minus headers, retransmissions, and framing overhead.</li>
+                    </ul>
+                    <p>So your "100 Mbps" Cat 5 cable has 100 Mbps of bandwidth, ~94 Mbps of typical TCP throughput, and ~88 Mbps of goodput. Welcome to the real world.</p>
+
+                    <h4>⚠️ Bits ≠ Bytes</h4>
+                    <p>Network speeds use <strong>bits</strong> (lowercase b). File sizes use <strong>bytes</strong> (uppercase B). 1 byte = 8 bits. A "100 Mbps" connection downloads at ~12.5 MB/s, not 100 MB/s. ISPs love this confusion.</p>
+
+                    <h4>Latency — the other axis</h4>
+                    <p>Two networks can both be "1 Gbps," but if one has 5 ms latency (fiber LAN) and the other has 600 ms (satellite), they feel completely different. <strong>Bandwidth is the width of the highway; latency is the commute time.</strong></p>
+
+                    <!-- Real-Life Example #3 -->
+                    <h4 style="margin-top:1.5rem;">🌍 Real-Life Example #3 — "Why is my 1 Gbps Internet so slow?!"</h4>
+                    <div class="ascii-diagram">
+8 AM (calm):                    9 PM (rush hour):
+Student 1 ─┐                   Student 1 ─┐
+Student 2 ─┤                   Student 2 ─┤
+Student 3 ─┼──[10 Gbps shared]─ Student 3 ─┤
+(...)    ─┤  upstream pipe     Student 4 ─┼──[10 Gbps shared]─
+Student 8 ─┘                   (...)    ─┤
+                               Student 200┘
+per-student ≈ 920 Mbps ✅       per-student ≈ 50-80 Mbps ❌
+                    </div>
+
+                    <!-- Live Dorm Simulator -->
+                    <h4 style="margin-top:1.5rem;">💻 Interactive: Dorm Bandwidth Simulator</h4>
+                    <iframe class="demo-frame" srcdoc="
+<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Dorm Sim</title><style>
+body{font-family:system-ui,sans-serif;max-width:550px;margin:1rem auto;padding:1rem;background:#f4f7fa;color:#1a2330;}
+.card{background:#fff;padding:1.25rem;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.08);}
+h1{color:#008b8b;font-size:1.2rem;}input[type=range]{width:100%;}
+.result{margin-top:1rem;padding:.75rem;background:#fff7e0;border-left:4px solid #f5a524;border-radius:6px;}
+.happy{color:#1f8a4d;font-weight:700;}.sad{color:#b32824;font-weight:700;}
+</style></head><body><div class='card'><h1>🏫 Dorm Bandwidth Simulator</h1><p>Drag sliders to see how shared bandwidth works.</p>
+<label>Total upstream: <span id='bwLabel'>10000</span> Mbps</label><input id='bw' type='range' min='100' max='40000' step='100' value='10000' oninput='update()'>
+<label>Active users: <span id='userLabel'>8</span></label><input id='users' type='range' min='1' max='500' value='8' oninput='update()'>
+<div id='result' class='result'>Adjust sliders to see result.</div></div>
+<script>function update(){const bw=parseInt(document.getElementById('bw').value,10);const users=parseInt(document.getElementById('users').value,10);document.getElementById('bwLabel').textContent=bw;document.getElementById('userLabel').textContent=users;const perUser=bw/users;const cls=perUser>=100?'happy':'sad';const face=perUser>=100?'😀':'😞';document.getElementById('result').innerHTML='<span class=\"'+cls+'\">'+face+' Per-user: '+perUser.toFixed(1)+' Mbps</span><br><small>Total '+bw+' Mbps / '+users+' users = '+perUser.toFixed(1)+' each.</small>';}update();
+</script></body></html>
+                    " title="Dorm Bandwidth Simulator"></iframe>
+                </div>
+
+                <!-- Lecture 1 Quiz -->
+                <div class="card" id="quiz1">
+                    <h3>📝 Lecture 1 — Quick Check Quiz</h3>
+                    <div id="quiz1Container"></div>
+                </div>
+            </section>
+
+            <!-- ==================== EXERCISE 1 ==================== -->
+            <section id="ex1">
+                <div class="card" id="ex1-gns3">
+                    <h2>🛠️ Exercise 1 — GNS3 & VirtualBox Deep Dive (1 hour)</h2>
+                    <p><strong>Format:</strong> Hands-on lab. Start in class, finish at home. Deliverable: illustrated report.</p>
+
+                    <h3>Lab 1.1 — GNS3 Deep Dive</h3>
+                    <button class="accordion-toggle" onclick="toggleAccordion(this)">1.1.1 The User Interface <span class="icon">▼</span></button>
+                    <div class="accordion-body">
+                        <div class="ascii-diagram">
+┌──────────────────────────────────────────────────────────┐
+│ [ Menu bar ] File · Edit · View · Control · Tools · Help │
+├────────────┬───────────────────────────────┬─────────────┤
+│ Devices    │     Workspace canvas          │ Topology    │
+│ Toolbox    │     (drag devices, draw links)│ Summary     │
+│ (left)     │                               │ (right)     │
+├────────────┴───────────────────────────────┴─────────────┤
+│ Console / Server / Errors panes (bottom)                 │
+└──────────────────────────────────────────────────────────┘
+                        </div>
+                        <ol>
+                            <li>Open GNS3 → <strong>File → New blank project</strong> → name it Day02_UI_Tour.</li>
+                            <li>Drag a <strong>VPCS</strong> node onto the canvas → call it PC1.</li>
+                            <li>Drag a second PC2 and an <strong>Ethernet switch</strong> between them.</li>
+                            <li>Click the <strong>link tool</strong>, connect PC1 → Switch → PC2.</li>
+                            <li>Click <strong>▶ Start all</strong>. Links go from red to green — <strong>L1 is up!</strong></li>
+                            <li>Right-click PC1 → Console: <code>ip 192.168.1.10/24</code> → <code>save</code> → <code>ping 192.168.1.20</code></li>
+                        </ol>
+                    </div>
+
+                    <button class="accordion-toggle" onclick="toggleAccordion(this)">1.1.2 The GNS3 Marketplace <span class="icon">▼</span></button>
+                    <div class="accordion-body">
+                        <p>Free, community-curated catalog of pre-built appliances. In GNS3: <strong>File → Import appliance → Help me find an appliance</strong> opens the Marketplace. Search for "Cisco IOSv" or "OPNsense."</p>
+                    </div>
+
+                    <button class="accordion-toggle" onclick="toggleAccordion(this)">1.1.3 VM Imports (from VirtualBox) <span class="icon">▼</span></button>
+                    <div class="accordion-body">
+                        <p><strong>Edit → Preferences → VirtualBox VMs → New</strong>. Pick a VM you've built in VirtualBox. Set NIC count (4 is sane). The VM appears in the Devices Toolbox.</p>
+                    </div>
+                </div>
+
+                <div class="card" id="ex1-vbox">
+                    <h3>Lab 1.2 — VirtualBox Deep Dive</h3>
+                    <button class="accordion-toggle" onclick="toggleAccordion(this)">1.2.1 Snapshots: types & usage <span class="icon">▼</span></button>
+                    <div class="accordion-body">
+                        <p>A <strong>snapshot</strong> is a frozen, point-in-time copy of a VM's disk + RAM state.</p>
+                        <ul style="list-style:disc;padding-left:1.5rem;">
+                            <li><strong>Online snapshot</strong> (VM running): captures disk + RAM. Heavier.</li>
+                            <li><strong>Offline snapshot</strong> (VM powered off): disk only. Smaller, ideal for baselines.</li>
+                        </ul>
+                        <p>💡 <strong>Pro tip:</strong> Take a snapshot named <em>clean_baseline</em> before every lab. If you destroy your VM, you're 30 seconds from a fresh start.</p>
+                    </div>
+
+                    <button class="accordion-toggle" onclick="toggleAccordion(this)">1.2.2 Cloning: types & usage <span class="icon">▼</span></button>
+                    <div class="accordion-body">
+                        <ul style="list-style:disc;padding-left:1.5rem;">
+                            <li><strong>Full clone</strong> — independent copy of the entire virtual disk.</li>
+                            <li><strong>Linked clone</strong> — tiny diff-disk pointing back to parent. Saves disk space.</li>
+                        </ul>
+                    </div>
+
+                    <button class="accordion-toggle" onclick="toggleAccordion(this)">1.2.3 NIC Modes — 8 Attachment Modes <span class="icon">▼</span></button>
+                    <div class="accordion-body">
+                        <p>VirtualBox has <strong>8 attachment modes</strong>. Here's the complete reference:</p>
+                        <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+                            <thead><tr style="background:#f0fafa;"><th>Mode</th><th>Internet</th><th>Host↔VM</th><th>VM↔VM</th><th>Use Case</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>NAT</strong></td><td>✅</td><td>❌*</td><td>❌</td><td>Just get Internet in the VM</td></tr>
+                                <tr><td><strong>NAT Network</strong></td><td>✅</td><td>❌</td><td>✅</td><td>Lab of VMs + Internet</td></tr>
+                                <tr><td><strong>Bridged</strong></td><td>✅</td><td>✅</td><td>✅</td><td>VM looks like real PC on LAN</td></tr>
+                                <tr><td><strong>Internal Network</strong></td><td>❌</td><td>❌</td><td>✅</td><td>Quarantine / malware analysis</td></tr>
+                                <tr><td><strong>Host-Only</strong></td><td>❌</td><td>✅</td><td>✅</td><td>SSH from host, no Internet</td></tr>
+                                <tr><td><strong>Not Attached</strong></td><td>❌</td><td>❌</td><td>❌</td><td>Simulate unplugged cable</td></tr>
+                            </tbody>
+                        </table>
+                        <p style="font-size:0.8rem;color:#78716c;">*NAT allows host access via port forwarding only.</p>
+                    </div>
+
+                    <!-- Lab Tools Checklist -->
+                    <h4 style="margin-top:1.5rem;">✅ Lab Tools Tour Checklist</h4>
+                    <div id="labChecklist">
+                        <label style="display:block;padding:0.35rem 0;"><input type="checkbox" onchange="updateLabProgress()"> Opened GNS3 and created a blank project</label>
+                        <label style="display:block;padding:0.35rem 0;"><input type="checkbox" onchange="updateLabProgress()"> Dragged VPCS nodes and a switch onto canvas</label>
+                        <label style="display:block;padding:0.35rem 0;"><input type="checkbox" onchange="updateLabProgress()"> Linked devices and saw green links (L1 up)</label>
+                        <label style="display:block;padding:0.35rem 0;"><input type="checkbox" onchange="updateLabProgress()"> Successfully pinged between VPCS nodes</label>
+                        <label style="display:block;padding:0.35rem 0;"><input type="checkbox" onchange="updateLabProgress()"> Imported OPNsense appliance from Marketplace</label>
+                        <label style="display:block;padding:0.35rem 0;"><input type="checkbox" onchange="updateLabProgress()"> Created VirtualBox snapshot (clean_install)</label>
+                        <label style="display:block;padding:0.35rem 0;"><input type="checkbox" onchange="updateLabProgress()"> Created linked clone of Ubuntu VM</label>
+                        <label style="display:block;padding:0.35rem 0;"><input type="checkbox" onchange="updateLabProgress()"> Tested Internal Network mode between VMs</label>
+                    </div>
+                    <p style="margin-top:0.5rem;"><strong>Lab Progress:</strong> <span id="labProgressText">0/8</span></p>
+                    <div style="background:#e7e5e4;border-radius:10px;height:8px;overflow:hidden;"><div id="labProgressBar" style="height:100%;background:var(--brand);width:0%;transition:width 0.3s;"></div></div>
+                </div>
+            </section>
+
+            <!-- ==================== LECTURE 2 ==================== -->
+            <section id="lec2">
+                <div class="card">
+                    <h2>📘 Lecture 2 — Standards, Bodies & the OSI vs TCP/IP vs Hybrid Debate (1 hour)</h2>
+                    <p style="font-style:italic;">"Standards are why your laptop, made by a Taiwanese company, can talk to a Cisco router built in California, over a fiber drawn in Japan, to a server running open-source software written by a Finn — and none of those people ever met."</p>
+                </div>
+
+                <!-- 2.1 -->
+                <div class="card" id="lec2-1">
+                    <h3>2.1 — Why Standards Exist (and who writes them)</h3>
+                    <p>Imagine the early 1970s. Every computer manufacturer built its own networking protocol. None of them talked to each other. The networking world was a Tower of Babel.</p>
+                    <p>Then came <strong>TCP/IP</strong> (ARPANET → Internet) and the <strong>OSI</strong> model. Today, we use <strong>TCP/IP in practice</strong> and <strong>OSI as the teaching framework</strong>.</p>
+
+                    <h4>The Standards Bodies</h4>
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+                            <thead><tr style="background:#f0fafa;"><th>Body</th><th>Stands for</th><th>Scope</th><th>Famous Deliverables</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>IEEE</strong></td><td>Institute of Electrical and Electronics Engineers</td><td>L1 & L2 (cabling, Ethernet, Wi-Fi)</td><td>802.3 (Ethernet), 802.11 (Wi-Fi)</td></tr>
+                                <tr><td><strong>IETF</strong></td><td>Internet Engineering Task Force</td><td>L3+ (Internet protocols)</td><td>TCP, IP, HTTP, DNS — all RFCs</td></tr>
+                                <tr><td><strong>ISO</strong></td><td>International Organization for Standardization</td><td>Cross-cutting reference models</td><td>OSI 7-layer model</td></tr>
+                                <tr><td><strong>ITU-T</strong></td><td>International Telecommunication Union</td><td>Telecom infrastructure</td><td>G.652 (fiber), V-series modems</td></tr>
+                                <tr><td><strong>TIA/EIA</strong></td><td>Telecommunications Industry Association</td><td>Cabling standards</td><td>TIA-568 (Cat 5e/6/6a/8)</td></tr>
+                                <tr><td><strong>ICANN</strong></td><td>Internet Corporation for Assigned Names</td><td>DNS, IP allocation</td><td>Manages root DNS</td></tr>
+                                <tr><td><strong>W3C</strong></td><td>World Wide Web Consortium</td><td>Web standards</td><td>HTML, CSS, WCAG</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p style="margin-top:0.75rem;"><strong>🧠 Memory hook:</strong> IEEE = wires & waves. IETF = the Internet itself. ISO = theory. TIA = the Cat numbers on cables.</p>
+                </div>
+
+                <!-- 2.2 -->
+                <div class="card" id="lec2-2">
+                    <h3>2.2 — The OSI 7-Layer Model</h3>
+                    <p>In 1984, ISO published the <strong>OSI Reference Model</strong>. OSI never won as a protocol stack, but it <strong>completely won as the language we use to talk about networks</strong>.</p>
+
+                    <!-- Interactive OSI Layer Tabs -->
+                    <div style="display:flex;flex-wrap:wrap;gap:0;border-bottom:2px solid #e7e5e4;margin-top:1rem;" id="osiTabs">
+                        <button class="tab-btn active" onclick="switchOsiLayer(7)" style="flex:1;min-width:60px;">L7 App</button>
+                        <button class="tab-btn" onclick="switchOsiLayer(6)" style="flex:1;min-width:60px;">L6 Pres</button>
+                        <button class="tab-btn" onclick="switchOsiLayer(5)" style="flex:1;min-width:60px;">L5 Sess</button>
+                        <button class="tab-btn" onclick="switchOsiLayer(4)" style="flex:1;min-width:60px;">L4 Trans</button>
+                        <button class="tab-btn" onclick="switchOsiLayer(3)" style="flex:1;min-width:60px;">L3 Net</button>
+                        <button class="tab-btn" onclick="switchOsiLayer(2)" style="flex:1;min-width:60px;">L2 Data</button>
+                        <button class="tab-btn" onclick="switchOsiLayer(1)" style="flex:1;min-width:60px;">L1 Phys</button>
+                    </div>
+                    <div id="osiLayerDetail" style="padding:1rem;background:#fafaf9;border-radius:0 0 10px 10px;min-height:140px;"></div>
+
+                    <p style="margin-top:1rem;"><strong>🎓 Mnemonics:</strong> Bottom-up: <strong>P</strong>lease <strong>D</strong>o <strong>N</strong>ot <strong>T</strong>ell <strong>S</strong>ales <strong>P</strong>eople <strong>A</strong>nything. Top-down: <strong>A</strong>ll <strong>P</strong>eople <strong>S</strong>eem <strong>T</strong>o <strong>N</strong>eed <strong>D</strong>ata <strong>P</strong>rocessing.</p>
+
+                    <!-- OSI Troubleshooting Ladder -->
+                    <h4 style="margin-top:1.5rem;">🌍 Real-Life Example #4 — "My website is down" — diagnosing layer by layer</h4>
+                    <div class="ascii-diagram">
+╔══════════════════════════════════════════════════════════════╗
+║              OSI TROUBLESHOOTING LADDER                     ║
+╚══════════════════════════════════════════════════════════════╝
+L7 Application → Does the app log say something? Curl works?
+       │
+L6 Presentation → TLS handshake errors? Cert expired?
+       │
+L5 Session → Sessions hanging / timing out?
+       │
+L4 Transport → Port 443 open? telnet / nc test? Firewall? ◀── often here!
+       │
+L3 Network → Can I ping the server's IP? traceroute reaches it?
+       │
+L2 Data Link → ARP entry exists? Switch interface up? VLAN right?
+       │
+L1 Physical → Cable plugged in? Link light on? NIC enabled?
+                    </div>
+
+                    <!-- Python OSI Troubleshooter -->
+                    <h4 style="margin-top:1.5rem;">💻 Python: OSI Troubleshooter</h4>
+                    <p>Run the interactive troubleshooter below (simulated in browser):</p>
+                    <button onclick="simulateOsiTroubleshooter()" style="background:var(--brand);color:#fff;border:none;padding:0.5rem 1rem;border-radius:6px;cursor:pointer;margin-bottom:0.5rem;">▶ Simulate OSI Troubleshooter</button>
+                    <pre class="code-block" id="osiTroubleshooterOutput" style="max-height:250px;overflow-y:auto;">Click the button above to simulate the troubleshooter walkthrough...</pre>
+                </div>
+
+                <!-- OSI Troubleshooting simulation data -->
+                <script>
+                    const osiSimSteps = [
+                        { layer: 1, name: 'Physical', question: 'Is the cable plugged in and the NIC link-light ON? (y/n): ', fix: 'Reseat the cable. Try a different port. Replace the cable.' },
+                        { layer: 2, name: 'Data Link', question: 'Does "ip link" (or ipconfig) show the interface UP? (y/n): ',
+                            fix: 'Bring the interface up: "sudo ip link set eth0 up". Check VLAN.' },
+                        { layer: 3, name: 'Network', question: 'Can you ping the server\'s IP address? (y/n): ',
+                            fix: 'Check default gateway, routing table, and that the IP is reachable.' },
+                        { layer: 4, name: 'Transport', question: 'Is the destination port (e.g. 443) open from your machine? (y/n): ',
+                            fix: 'Test with: "nc -zv host 443". If closed → firewall is blocking.' },
+                        { layer: 5, name: 'Session', question: 'Do sessions establish and stay open (no immediate RST)? (y/n): ',
+                            fix: 'Check for proxies, NAT timeouts, idle-session reapers.' },
+                        { layer: 6, name: 'Presentation',
+                            question: 'Does the TLS/SSL handshake complete without cert errors? (y/n): ',
+                            fix: 'Check certificate expiry / chain. "openssl s_client -connect host:443".' },
+                        { layer: 7, name: 'Application', question: 'Does the application itself respond correctly (curl / browser)? (y/n): ',
+                            fix: 'Check application logs. Service running? DB reachable from the app?' },
+                    ];
+                    let osiSimIndex = 0;
+                    let osiSimActive = false;
+                    let osiSimOutput = '';
+
+                    function simulateOsiTroubleshooter() {
+                        osiSimIndex = 0;
+                        osiSimActive = true;
+                        osiSimOutput = '=== Cyber.SoHo OSI Troubleshooter ===\nWalking up the OSI stack. First "no" is the failing layer.\n\n';
+                        document.getElementById('osiTroubleshooterOutput').textContent = osiSimOutput +
+                            '--- Layer 1 (Physical) ---\n' + osiSimSteps[0].question +
+                            '\n[Simulation: Automatically answering "y" for layers 1-3, "n" at layer 4...]\n\n';
+                        // Auto-simulate: answer y for layers 0-2, n at layer 3 (Transport)
+                        let out = osiSimOutput;
+                        for (let i = 0; i < 3; i++) {
+                            out += '--- Layer ' + osiSimSteps[i].layer + ' (' + osiSimSteps[i].name + ') ---\n';
+                            out += osiSimSteps[i].question + 'y\n✅ Layer ' + osiSimSteps[i].layer + ' OK.\n\n';
+                        }
+                        out += '--- Layer 4 (Transport) ---\n';
+                        out += osiSimSteps[3].question + 'n\n';
+                        out += '\n❌ Failure isolated at Layer 4 (Transport).\n';
+                        out += '💡 Suggested fix: ' + osiSimSteps[3].fix + '\n';
+                        document.getElementById('osiTroubleshooterOutput').textContent = out;
+                    }
+                </script>
+
+                <!-- 2.3 -->
+                <div class="card" id="lec2-3">
+                    <h3>2.3 — The TCP/IP (Internet / DoD) Model</h3>
+                    <p>The <strong>TCP/IP model</strong> was created <strong>before</strong> OSI and was the practical scaffolding for the Internet. It has fewer layers because the upper three OSI layers blur into "Application."</p>
+                    <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+                        <thead><tr style="background:#f0fafa;"><th>TCP/IP Layer</th><th>Roughly maps to OSI</th><th>Examples</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>4. Application</strong></td><td>OSI 5+6+7</td><td>HTTP, DNS, SMTP, SSH, TLS</td></tr>
+                            <tr><td><strong>3. Transport</strong></td><td>OSI 4</td><td>TCP, UDP</td></tr>
+                            <tr><td><strong>2. Internet</strong></td><td>OSI 3</td><td>IP, ICMP, ARP*</td></tr>
+                            <tr><td><strong>1. Network Access</strong></td><td>OSI 1+2</td><td>Ethernet, Wi-Fi, MAC, cables</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 2.4 -->
+                <div class="card" id="lec2-4">
+                    <h3>2.4 — The Hybrid (5-Layer) Model</h3>
+                    <p>Most modern textbooks teach a <strong>5-layer hybrid</strong>: Physical · Data Link · Network · Transport · Application. This keeps the L1/L2 distinction while not pretending Session and Presentation are "real" layers in practice.</p>
+                    <div class="ascii-diagram">
+        OSI (7)          Hybrid (5)        TCP/IP (4)
+┌───────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+│ 7. Application    │ │                 │ │                 │
+├───────────────────┤ │                 │ │                 │
+│ 6. Presentation   ├─│ 5. Application  ├─│ 4. Application  │
+├───────────────────┤ │                 │ │                 │
+│ 5. Session        │ │                 │ │                 │
+├───────────────────┤ ├─────────────────┤ ├─────────────────┤
+│ 4. Transport      ├─│ 4. Transport    ├─│ 3. Transport    │
+├───────────────────┤ ├─────────────────┤ ├─────────────────┤
+│ 3. Network        ├─│ 3. Network      ├─│ 2. Internet     │
+├───────────────────┤ ├─────────────────┤ ├─────────────────┤
+│ 2. Data Link      ├─│ 2. Data Link    ├─│                 │
+├───────────────────┤ ├─────────────────┤ │ 1. Network      │
+│ 1. Physical       ├─│ 1. Physical     ├─│    Access       │
+└───────────────────┘ └─────────────────┘ └─────────────────┘
+  Theory model        Best for teaching    Practice model
+                    </div>
+
+                    <!-- Encapsulation Demo -->
+                    <h4 style="margin-top:1.5rem;">🌍 Real-Life Example #5 — Encapsulation: a packet's journey</h4>
+                    <div class="ascii-diagram">
+You type → "Hello"
+       │
+┌──────▼──────────────────────────────────────────────┐
+│ L7 │ "Hello"                     │ Application data │
+├────┴──────────────────────────────────────────────┤
+│ L4 │ TCP hdr │ "Hello"           │ Segment          │
+├────┴─────────┴───────────────────────────────────┤
+│ L3 │ IP hdr │ TCP hdr │ "Hello" │ Packet           │
+├────┴────────┴─────────┴──────────────────────────┤
+│ L2 │ Eth hdr│ IP hdr │ TCP hdr │ "Hello" │ Eth tail│ Frame │
+├────┴────────┴────────┴─────────┴─────────┴────────┤
+│ L1 │ 0101110010101000001110100010101010101...       │ Bits │
+└────────────────────────────────────────────────────┘
+         ▼ [ Light pulses or electrical wiggles ] ▼
+         ▼         Travels the network            ▼
+         ▼ [ Decapsulation: L1→L2→L3→L4→L7 ]     ▼
+         ▼       Friend sees: "Hello"             ▼
+                    </div>
+
+                    <!-- Encapsulation Python Demo -->
+                    <h4 style="margin-top:1.5rem;">💻 Python: Encapsulation Demo</h4>
+                    <button onclick="simulateEncapsulation()" style="background:var(--brand);color:#fff;border:none;padding:0.5rem 1rem;border-radius:6px;cursor:pointer;margin-bottom:0.5rem;">▶ Simulate Encapsulation ("Hello")</button>
+                    <pre class="code-block" id="encapOutput" style="max-height:300px;overflow-y:auto;">Click the button above to simulate encapsulation...</pre>
+                </div>
+
+                <script>
+                    function simulateEncapsulation() {
+                        const msg = 'Hello';
+                        const l4 = '[L4 TCP src=49152 dst=80] ' + msg;
+                        const l3 = '[L3 IP src=10.0.0.10 dst=93.184.216.34] ' + l4;
+                        const l2 = '[L2 Eth src=AA:BB:CC dst=DD:EE:FF] ' + l3;
+                        const l1_bits = Array.from(l2).map(c => c.charCodeAt(0).toString(2).padStart(8, '0')).join(
+                            '');
+                        let out = 'Type the message to send: ' + msg + '\n\n';
+                        out += 'L7 Application data: ' + msg + '\n\n';
+                        out += '--- ENCAPSULATION (top → bottom) ---\n';
+                        out += 'L4 Segment: ' + l4 + '\n';
+                        out += 'L3 Packet:  ' + l3 + '\n';
+                        out += 'L2 Frame:   ' + l2 + '\n';
+                        out += 'L1 Bits:    ' + l1_bits.substring(0, 80) + '...\n\n';
+                        out += '...transmitted across cables / fiber / Wi-Fi...\n\n';
+                        out += '--- DECAPSULATION (bottom → top) ---\n';
+                        out += 'L2 Recovered frame:  ' + l2 + '\n';
+                        out += 'L3 Recovered packet: ' + l3 + '\n';
+                        out += 'L4 Recovered segment:' + l4 + '\n';
+                        out += 'L7 Recovered data:   ' + msg + '\n\n';
+                        out += '✅ Match! The message survived the round-trip.';
+                        document.getElementById('encapOutput').textContent = out;
+                    }
+                </script>
+
+                <!-- Lecture 2 Quiz -->
+                <div class="card" id="quiz2">
+                    <h3>📝 Lecture 2 — Quick Check Quiz</h3>
+                    <div id="quiz2Container"></div>
+                </div>
+            </section>
+
+            <!-- ==================== EXERCISE 2 ==================== -->
+            <section id="ex2">
+                <div class="card">
+                    <h2>🛠️ Exercise 2 — Build the Topology in GNS3 & VirtualBox (1 hour)</h2>
+                    <p><strong>Project Stage 2 🚀</strong> — You're building the very first physical-layer-up skeleton of the Acme SoHo Consulting network.</p>
+
+                    <h3>Lab 2.1 — Build the topology in GNS3</h3>
+                    <div class="ascii-diagram">
+        ┌──────────────┐        ┌──────────────┐
+        │  PC1 (VPCS)  │        │  PC2 (VPCS)  │
+        │ 192.168.1.10 │        │ 192.168.1.20 │
+        └──────┬───────┘        └──────┬───────┘
+               │ e0/0             e0/1 │
+        ┌──────▼─────────────────────────▼──────┐
+        │   Multilayer Switch (SW1) — L2+L3     │
+        └────────────────────┬──────────────────┘
+                             │ e1/0
+                      ┌──────▼──────┐
+                      │  Router R1  │
+                      │  (Cisco)    │
+                      └─────────────┘
+                    </div>
+                    <ol>
+                        <li>Open GNS3 → <strong>New blank project</strong> → acme_soho_stage2</li>
+                        <li>Drag: 1 Cisco router (R1), 1 multilayer switch (SW1), 2 VPCS (PC1, PC2)</li>
+                        <li>Cable: PC1 ↔ SW1 (e0/0), PC2 ↔ SW1 (e0/1), SW1 (e1/0) ↔ R1 (Gi0/0)</li>
+                        <li><strong>Start all</strong> — every link turns green = <strong>L1 up</strong></li>
+                        <li>Configure PC1: <code>ip 192.168.1.10/24 192.168.1.1</code> → save</li>
+                        <li>Configure PC2: <code>ip 192.168.1.20/24 192.168.1.1</code> → save</li>
+                        <li>Configure R1: <code>interface GigabitEthernet0/0 → ip address 192.168.1.1 255.255.255.0 → no shutdown</code></li>
+                        <li>Test: <code>ping 192.168.1.20</code> (L2) and <code>ping 192.168.1.1</code> (L3)</li>
+                    </ol>
+
+                    <h3 style="margin-top:1.5rem;">📝 Reflection Questions</h3>
+                    <ol>
+                        <li>In GNS3, which OSI layer was being verified when you saw a <em>green link</em>? <span class="tooltip" title="Click to reveal" onclick="this.textContent='✅ L1 — Physical'">(Click to reveal)</span></li>
+                        <li>In VirtualBox, what was the role of <em>Internal Network</em> vs <em>NAT</em>? <span class="tooltip" title="Click to reveal" onclick="this.textContent='✅ Internal = air-gapped lab, NAT = Internet access only'">(Click to reveal)</span></li>
+                        <li>Where in the OSI stack does <strong>ping</strong> operate? <span class="tooltip" title="Click to reveal" onclick="this.textContent='✅ L3 — ICMP; but relies on L2 ARP first'">(Click to reveal)</span></li>
+                    </ol>
+
+                    <!-- Project Stage Deliverable Checklist -->
+                    <h4 style="margin-top:1.5rem;">📋 Project Stage 2 — Deliverable Checklist</h4>
+                    <div id="projectChecklist">
+                        <label style="display:block;padding:0.3rem 0;"><input type="checkbox" onchange="updateProjectProgress()"> Annotated screenshot of green-linked topology</label>
+                        <label style="display:block;padding:0.3rem 0;"><input type="checkbox" onchange="updateProjectProgress()"> Screenshot of successful ping in PC1 console</label>
+                        <label style="display:block;padding:0.3rem 0;"><input type="checkbox" onchange="updateProjectProgress()"> Router's "show ip interface brief" output</label>
+                        <label style="display:block;padding:0.3rem 0;"><input type="checkbox" onchange="updateProjectProgress()"> Wireshark capture (.pcap) with ARP/ICMP</label>
+                        <label style="display:block;padding:0.3rem 0;"><input type="checkbox" onchange="updateProjectProgress()"> Exported portable .gns3project file</label>
+                        <label style="display:block;padding:0.3rem 0;"><input type="checkbox" onchange="updateProjectProgress()"> VirtualBox screenshot with ping + tcpdump</label>
+                        <label style="display:block;padding:0.3rem 0;"><input type="checkbox" onchange="updateProjectProgress()"> Reflection paragraph written</label>
+                    </div>
+                    <p><strong>Project Progress:</strong> <span id="projectProgressText">0/7</span></p>
+                    <div style="background:#e7e5e4;border-radius:10px;height:8px;overflow:hidden;"><div id="projectProgressBar" style="height:100%;background:var(--brand);width:0%;transition:width 0.3s;"></div></div>
+                    <button onclick="exportProjectSummary()" style="margin-top:0.75rem;background:var(--brand);color:#fff;border:none;padding:0.5rem 1rem;border-radius:6px;cursor:pointer;">📤 Export Project Summary</button>
+                    <pre id="projectSummaryOutput" style="display:none;margin-top:0.5rem;background:#1e1e1e;color:#d4d4d4;padding:1rem;border-radius:8px;max-height:200px;overflow-y:auto;"></pre>
+                </div>
+            </section>
+
+            <!-- REFERENCES -->
+            <section class="card" id="references">
+                <h2>📚 References & Useful Links</h2>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;font-size:0.85rem;">
+                    <div><strong>Course:</strong><br><a href="https://www.netacad.com/courses/networking-essentials" target="_blank" style="color:var(--brand);">Cisco NetAcad — Networking Essentials</a></div>
+                    <div><strong>Tooling:</strong><br><a href="https://www.virtualbox.org/" target="_blank" style="color:var(--brand);">Oracle VirtualBox</a> | <a href="https://www.gns3.com/" target="_blank" style="color:var(--brand);">GNS3</a> | <a href="https://www.wireshark.org/" target="_blank" style="color:var(--brand);">Wireshark</a></div>
+                    <div><strong>Standards:</strong><br><a href="https://www.ieee.org/" target="_blank" style="color:var(--brand);">IEEE</a> | <a href="https://www.ietf.org/" target="_blank" style="color:var(--brand);">IETF</a> | <a href="https://www.rfc-editor.org/" target="_blank" style="color:var(--brand);">RFC Editor</a></div>
+                    <div><strong>Key RFCs:</strong><br><a href="https://www.rfc-editor.org/rfc/rfc791" target="_blank" style="color:var(--brand);">RFC 791 (IPv4)</a> | <a href="https://www.rfc-editor.org/rfc/rfc9293" target="_blank" style="color:var(--brand);">RFC 9293 (TCP)</a> | <a href="https://www.rfc-editor.org/rfc/rfc1918" target="_blank" style="color:var(--brand);">RFC 1918 (Private IPs)</a></div>
+                    <div><strong>YouTube:</strong><br>PowerCert Animated | Practical Networking | NetworkChuck | David Bombal</div>
+                    <div><strong>Safety:</strong><br><a href="https://www.virustotal.com/" target="_blank" style="color:var(--brand);">VirusTotal</a> — scan URLs & files</div>
+                </div>
+            </section>
+
+            <!-- FOOTER -->
+            <footer style="background:#1c1917;color:#a8a29e;padding:1.5rem;border-radius:10px;text-align:center;margin-top:1.5rem;">
+                <p style="margin:0;">🛡️ <strong>Cyber.SoHo Educational Hub</strong> © 2026</p>
+                <p style="margin:0;font-size:0.8rem;">From the Industry to the Classroom — Building the IT's Future, Today and Together!</p>
+                <p style="margin:0;font-size:0.75rem;">ALL Rights Reserved</p>
+            </footer>
+
+        </div>
+    </main>
+
+    <script>
+        // ============ SIDEBAR ============
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const hamburger = document.getElementById('hamburger');
+
+        hamburger.addEventListener('click', () => {
+            if (window.innerWidth < 1024) {
+                sidebar.classList.toggle('mobile-open');
+            } else {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+            }
+        });
+
+        // Close sidebar on mobile when clicking a link
+        document.querySelectorAll('.sidebar a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 1024) {
+                    sidebar.classList.remove('mobile-open');
+                }
+            });
+        });
+
+        // Highlight active sidebar link based on scroll
+        const sidebarLinks = document.querySelectorAll('.sidebar a');
+        const sections = [];
+        sidebarLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && href.startsWith('#') && href.length > 1) {
+                const el = document.getElementById(href.substring(1));
+                if (el) sections.push({ link, el });
+            }
+        });
+
+        function updateActiveLink() {
+            const scrollY = window.scrollY + 100;
+            let active = null;
+            sections.forEach(s => {
+                if (s.el.offsetTop <= scrollY) active = s.link;
+            });
+            sidebarLinks.forEach(l => l.classList.remove('active'));
+            if (active) active.classList.add('active');
+        }
+        window.addEventListener('scroll', updateActiveLink);
+
+        // ============ PROGRESS BAR ============
+        const progressFill = document.getElementById('progressFill');
+        const allCards = document.querySelectorAll('.card');
+        const totalCards = allCards.length;
+        const observedCards = new Set();
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    observedCards.add(entry.target);
+                    const pct = Math.round((observedCards.size / totalCards) * 100);
+                    progressFill.style.width = pct + '%';
+                }
+            });
+        }, { threshold: 0.3 });
+
+        allCards.forEach(card => observer.observe(card));
+
+        // ============ ACCORDION ============
+        function toggleAccordion(btn) {
+            btn.classList.toggle('open');
+            const body = btn.nextElementSibling;
+            body.classList.toggle('open');
+        }
+
+        // ============ SCHEDULE TOGGLE ============
+        function toggleSchedule() {
+            const detail = document.getElementById('scheduleDetail');
+            detail.style.display = detail.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // ============ OSI LAYER TABS ============
+        const osiLayerData = {
+            7: { name: 'Application', what: 'The layer the user sees', unit: 'data', examples: 'HTTP, SMTP, DNS, SSH',
+                color: '#e04040' },
+            6: { name: 'Presentation', what: 'Format, encryption, compression', unit: 'data', examples: 'TLS, JPEG, ASCII',
+                color: '#f5a524' },
+            5: { name: 'Session', what: 'Open / maintain / close conversations', unit: 'data', examples: 'NetBIOS, RPC',
+                color: '#f0c040' },
+            4: { name: 'Transport', what: 'End-to-end reliability & ports', unit: 'segment (TCP) / datagram (UDP)',
+                examples: 'TCP, UDP', color: '#2b6cff' },
+            3: { name: 'Network', what: 'Logical addressing & routing', unit: 'packet', examples: 'IP, ICMP, OSPF, routers',
+                color: '#2ec27e' },
+            2: { name: 'Data Link', what: 'Local addressing & framing', unit: 'frame', examples: 'Ethernet, MAC, switches',
+                color: '#8b5cf6' },
+            1: { name: 'Physical', what: 'Cables, voltages, light', unit: 'bits', examples: 'UTP/STP/Fiber, hubs, NICs',
+                color: '#78716c' },
+        };
+
+        function switchOsiLayer(num) {
+            document.querySelectorAll('#osiTabs .tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#osiTabs .tab-btn')[7 - num].classList.add('active');
+            const d = osiLayerData[num];
+            document.getElementById('osiLayerDetail').innerHTML = `
+            <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+              <div style="background:${d.color};color:#fff;border-radius:50%;width:50px;height:50px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.2rem;">L${num}</div>
+              <div>
+                <strong style="font-size:1.1rem;">${d.name} Layer</strong>
+                <p style="margin:0.2rem 0;color:#57534e;">${d.what}</p>
+                <p style="margin:0;font-size:0.85rem;"><strong>Data unit:</strong> ${d.unit} &nbsp;|&nbsp; <strong>Examples:</strong> ${d.examples}</p>
+              </div>
+            </div>`;
+        }
+        switchOsiLayer(7); // Default
+
+        // ============ LAB CHECKLIST ============
+        function updateLabProgress() {
+            const checks = document.querySelectorAll('#labChecklist input[type=checkbox]');
+            const checked = Array.from(checks).filter(c => c.checked).length;
+            document.getElementById('labProgressText').textContent = checked + '/8';
+            document.getElementById('labProgressBar').style.width = (checked / 8 * 100) + '%';
+            localStorage.setItem('labChecklist', JSON.stringify(Array.from(checks).map(c => c.checked)));
+        }
+        // Load saved state
+        try {
+            const saved = JSON.parse(localStorage.getItem('labChecklist') || '[]');
+            const checks = document.querySelectorAll('#labChecklist input[type=checkbox]');
+            checks.forEach((c, i) => { if (saved[i]) c.checked = true; });
+            updateLabProgress();
+        } catch (e) {}
+
+        // ============ PROJECT CHECKLIST ============
+        function updateProjectProgress() {
+            const checks = document.querySelectorAll('#projectChecklist input[type=checkbox]');
+            const checked = Array.from(checks).filter(c => c.checked).length;
+            document.getElementById('projectProgressText').textContent = checked + '/7';
+            document.getElementById('projectProgressBar').style.width = (checked / 7 * 100) + '%';
+            localStorage.setItem('projectChecklist', JSON.stringify(Array.from(checks).map(c => c.checked)));
+        }
+        try {
+            const saved = JSON.parse(localStorage.getItem('projectChecklist') || '[]');
+            const checks = document.querySelectorAll('#projectChecklist input[type=checkbox]');
+            checks.forEach((c, i) => { if (saved[i]) c.checked = true; });
+            updateProjectProgress();
+        } catch (e) {}
+
+        function exportProjectSummary() {
+            const checks = document.querySelectorAll('#projectChecklist input[type=checkbox]');
+            const labels = Array.from(checks).map((c, i) => {
+                const label = c.parentElement.textContent.trim();
+                return (c.checked ? '✅' : '⬜') + ' ' + label;
+            });
+            const summary = 'Project Stage 2 — Deliverable Summary\n' + '='.repeat(45) + '\n\n' + labels.join('\n') +
+                '\n\n' + 'Generated: ' + new Date().toISOString().split('T')[0] + '\n' +
+                'Cyber.SoHo Educational Hub © 2026';
+            const output = document.getElementById('projectSummaryOutput');
+            output.style.display = 'block';
+            output.textContent = summary;
+            output.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ============ QUIZZES ============
+        function buildQuiz(containerId, questions) {
+            const container = document.getElementById(containerId);
+            let html = '';
+            questions.forEach((q, qi) => {
+                html +=
+                    `<div style="margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid #e7e5e4;"><p><strong>Q${qi+1}.</strong> ${q.q}</p>`;
+                q.options.forEach((opt, oi) => {
+                    html +=
+                        `<button class="quiz-option" onclick="checkQuizAnswer(this,${qi},${oi},'${containerId}')">${opt}</button>`;
+                });
+                html +=
+                    `<p style="margin-top:0.4rem;font-weight:600;display:none;" class="quiz-feedback" id="${containerId}_fb${qi}"></p></div>`;
+            });
+            html +=
+                `<p style="text-align:center;font-weight:700;" id="${containerId}_score"></p>`;
+            container.innerHTML = html;
+            container.dataset.total = questions.length;
+            container.dataset.correct = '0';
+            container.dataset.answered = '0';
+        }
+
+        function checkQuizAnswer(btn, qi, oi, containerId) {
+            const container = document.getElementById(containerId);
+            const total = parseInt(container.dataset.total);
+            const fbEl = document.getElementById(containerId + '_fb' + qi);
+            const allBtns = btn.parentElement.querySelectorAll('.quiz-option');
+            // Prevent re-answering
+            if (allBtns[0].classList.contains('correct') || allBtns[0].classList.contains('wrong') && allBtns[0] !==
+                btn && allBtns[1] && (allBtns[1].classList.contains('correct') || allBtns[1].classList.contains(
+                    'wrong'))) {
+                // Check if this specific question was already answered
+                let alreadyAnswered = false;
+                allBtns.forEach(b => { if (b.classList.contains('correct') || b.classList.contains('wrong'))
+                        alreadyAnswered = true; });
+                if (alreadyAnswered) return;
+            }
+            const correctIdx = parseInt(btn.parentElement.dataset.correct || '0');
+            if (oi === correctIdx) {
+                btn.classList.add('correct');
+                fbEl.textContent = '✅ Correct!';
+                fbEl.style.color = '#2ec27e';
+                fbEl.style.display = 'block';
+                container.dataset.correct = parseInt(container.dataset.correct) + 1;
+            } else {
+                btn.classList.add('wrong');
+                allBtns[correctIdx].classList.add('correct');
+                fbEl.textContent = '❌ Incorrect. The correct answer is highlighted in green.';
+                fbEl.style.color = '#e04040';
+                fbEl.style.display = 'block';
+            }
+            container.dataset.answered = parseInt(container.dataset.answered) + 1;
+            const scoreEl = document.getElementById(containerId + '_score');
+            const answered = parseInt(container.dataset.answered);
+            const correct = parseInt(container.dataset.correct);
+            if (answered >= total) {
+                scoreEl.textContent = '🏆 Final Score: ' + correct + '/' + total + ' (' + Math.round(correct / total *
+                    100) + '%)';
+            } else {
+                scoreEl.textContent = '📊 So far: ' + correct + '/' + answered + ' answered correctly';
+            }
+        }
+
+        // Lecture 1 Quiz
+        buildQuiz('quiz1Container', [
+            { q: 'Which cable type is immune to electromagnetic interference (EMI)?',
+                options: ['UTP Cat 6', 'STP Cat 6a', 'Fiber-optic (SMF/MMF)', 'Coaxial'], correct: 2 },
+            { q: 'What is the maximum distance for Cat 6a at 10 Gbps?',
+                options: ['30 meters', '55 meters', '100 meters', '200 meters'], correct: 2 },
+            { q: 'Bandwidth is to pipe width as ______ is to actual water flow.',
+                options: ['Latency', 'Throughput', 'Goodput', 'Frequency'], correct: 1 },
+            { q: 'How many bits are in 1 byte?', options: ['4', '8', '16', '32'], correct: 1 },
+        ]);
+        // Set correct data attributes
+        (function() {
+            const container = document.getElementById('quiz1Container');
+            const qDivs = container.querySelectorAll('div[style]');
+            const correctIndices = [2, 2, 1, 1];
+            qDivs.forEach((div, i) => { if (correctIndices[i] !== undefined) div.dataset.correct = correctIndices[
+                    i]; });
+        })();
+
+        // Lecture 2 Quiz
+        buildQuiz('quiz2Container', [
+            { q: 'Which standards body is responsible for Ethernet (802.3) and Wi-Fi (802.11)?',
+                options: ['IETF', 'ISO', 'IEEE', 'TIA/EIA'], correct: 2 },
+            { q: 'In the OSI model, which layer handles logical addressing and routing?',
+                options: ['Layer 1 — Physical', 'Layer 2 — Data Link', 'Layer 3 — Network', 'Layer 4 — Transport'],
+                correct: 2 },
+            { q: 'The TCP/IP model has how many layers?', options: ['3', '4', '5', '7'], correct: 1 },
+            { q: 'Encapsulation means:',
+                options: [
+                    'Stripping headers as data moves up the stack',
+                    'Wrapping data with protocol headers as it moves down the stack',
+                    'Compressing data for faster transmission',
+                    'Encrypting data for security'
+                ],
+                correct: 1 },
+        ]);
+        (function() {
+            const container = document.getElementById('quiz2Container');
+            const qDivs = container.querySelectorAll('div[style]');
+            const correctIndices = [2, 2, 1, 1];
+            qDivs.forEach((div, i) => { if (correctIndices[i] !== undefined) div.dataset.correct = correctIndices[
+                    i]; });
+        })();
+
+        // ============ CABLE CHART (Chart.js) ============
+        document.addEventListener('DOMContentLoaded', () => {
+            const ctx = document.getElementById('cableChart');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Cat 5', 'Cat 5e', 'Cat 6', 'Cat 6a', 'Cat 7', 'Cat 8'],
+                        datasets: [{
+                            label: 'Max Speed (Mbps)',
+                            data: [100, 1000, 10000, 10000, 10000, 40000],
+                            backgroundColor: ['#d6d3d1', '#a8a29e', '#f5a524', '#2ec27e', '#8b5cf6',
+                                '#2b6cff'
+                            ],
+                            borderWidth: 0,
+                            borderRadius: 6,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: true, position: 'top' },
+                            title: { display: true, text: 'Twisted-Pair Category Max Speed Comparison',
+                                font: { size: 14 } }
+                        },
+                        scales: {
+                            y: {
+                                type: 'logarithmic',
+                                title: { display: true, text: 'Speed (Mbps) — log scale' },
+                                ticks: { callback: v => v + ' Mbps' }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        // ============ INIT ============
+        updateActiveLink();
+        console.log('✅ Day 02 — Cyber.SoHo Interactive Learning Experience loaded successfully.');
+        console.log('📊 Progress tracking active. 🧭 Sidebar navigation ready. 📝 Quizzes ready. 💻 Live demos embedded.');
+    </script>
+</body>
+</html>
