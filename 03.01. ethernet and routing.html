@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 03 — Ethernet & Routing | Interactive Review</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fbf8f3',
+                            100: '#f5efe6',
+                            200: '#e8dbce',
+                            300: '#d7c0ab',
+                            400: '#c29e80',
+                            500: '#b2835c',
+                            600: '#a56c4b',
+                            700: '#8a553f',
+                            800: '#714636',
+                            900: '#5c3a2e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #fbf8f3;
+            color: #5c3a2e;
+        }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        .interactive-card {
+            transition: all 0.3s ease;
+        }
+        
+        .interactive-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .frame-part.active {
+            background-color: #c29e80;
+            color: white;
+            border-color: #a56c4b;
+        }
+        
+        .broadcast-node {
+            transition: background-color 0.5s ease;
+        }
+        
+        .broadcast-active {
+            background-color: #ef4444 !important;
+            color: white !important;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="font-sans antialiased text-brand-900 selection:bg-brand-300 selection:text-brand-900">
+
+<!-- Chosen Palette: Warm Neutrals (Stone/Beige/Amber derivatives). Backgrounds are warm off-white (#fbf8f3), text is deep brown/slate (#5c3a2e), accents are terracotta/amber (#c29e80 to #a56c4b). Provides a calm, focused, and academic feel. -->
+
+<!-- Application Structure Plan: The SPA is structured sequentially to follow the logical learning path of a network packet: starting at the hardware level (MAC/Frames), moving up to encapsulation, exploring network boundaries (Broadcasts), and finishing with routing logic (Layer 3). It uses an interactive dashboard layout where each section acts as a micro-learning module. This structure replaces the linear slide deck with an exploratory canvas where users can click to reveal data, simulating network processes instead of just reading about them. -->
+
+<!-- Visualization & Content Choices: 
+1. MAC/Frame Explorer -> Goal: Inform -> Interactive HTML Blocks -> User clicks frame segments to reveal purpose/size. Justification: Frames are literal blocks of data; clicking blocks builds intuition. No SVG used.
+2. Encapsulation Stack -> Goal: Organize/Relationships -> Hoverable HTML Flex Layout -> Hovering layers reveals header additions. Justification: Shows the "stack" nature of OSI visually. No SVG used.
+3. Broadcast Simulator -> Goal: Compare -> Interactive HTML Grid -> Buttons trigger color changes mimicking network floods based on device rules. Justification: Visualizing "containment" is better than reading the rule. No SVG used.
+4. Routing AD -> Goal: Compare/Inform -> Chart.js Horizontal Bar Chart -> Displays Cisco default AD values. Justification: AD is a quantitative priority system where lower is better; a sorted bar chart perfectly illustrates this hierarchy. No SVG/Mermaid used.
+-->
+
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+<nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-brand-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16 items-center">
+            <div class="flex-shrink-0 flex items-center gap-2">
+                <span class="text-2xl">🌐</span>
+                <span class="font-bold text-xl tracking-tight text-brand-800">Cyber.SoHo Hub</span>
+            </div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#l2-hardware" class="text-brand-700 hover:text-brand-500 font-medium transition-colors">L2 Hardware</a>
+                <a href="#encapsulation" class="text-brand-700 hover:text-brand-500 font-medium transition-colors">Encapsulation</a>
+                <a href="#boundaries" class="text-brand-700 hover:text-brand-500 font-medium transition-colors">Boundaries</a>
+                <a href="#routing" class="text-brand-700 hover:text-brand-500 font-medium transition-colors">Routing</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-20">
+
+    <header class="text-center max-w-4xl mx-auto space-y-6">
+        <div class="inline-block px-4 py-1.5 rounded-full bg-brand-100 text-brand-800 font-semibold text-sm tracking-wide mb-2 border border-brand-200">
+            Day 03 — Basics of Computer Networks
+        </div>
+        <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-brand-900 leading-tight">
+            Ethernet & Routing
+        </h1>
+        <p class="text-xl text-brand-700 max-w-2xl mx-auto leading-relaxed">
+            From the Industry to the Classroom. Today, Layer 2 and Layer 3 stop being abstract. Understand beat by beat what every device does when you press Enter on ping.
+        </p>
+        <div class="mt-8 p-6 bg-white rounded-2xl shadow-sm border border-brand-200 text-left relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-2 h-full bg-brand-500"></div>
+            <h3 class="font-bold text-lg mb-2 flex items-center gap-2">
+                <span>🎯</span> The Golden Rule
+            </h3>
+            <p class="text-xl italic font-medium text-brand-800">
+                "IP gets you there. MAC gets you to the next hop."
+            </p>
+        </div>
+    </header>
+
+    <section id="l2-hardware" class="scroll-mt-24">
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold mb-4 flex items-center gap-3">
+                <span class="bg-brand-800 text-white w-10 h-10 flex items-center justify-center rounded-lg text-xl shadow-md">1</span>
+                The Hardware layer: MAC & Frames
+            </h2>
+            <p class="text-lg text-brand-700 leading-relaxed max-w-4xl">
+                This section breaks down how local communication happens. A MAC address is a hardware-bound identity operating at Layer 2. To send data, it must be packaged into an Ethernet Frame. Interact with the elements below to understand the structure of MAC addresses and the anatomy of a standard IEEE 802.3 frame.
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-brand-200">
+                <h3 class="text-xl font-bold mb-4">The MAC Address (48-bit)</h3>
+                <p class="mb-6 text-sm text-brand-600">Hover over the sections to reveal how a MAC is assigned.</p>
+                
+                <div class="flex flex-col sm:flex-row text-center border-2 border-brand-800 rounded-xl overflow-hidden font-mono text-lg md:text-xl shadow-inner">
+                    <div class="flex-1 bg-brand-100 p-4 hover:bg-brand-200 transition-colors group cursor-pointer">
+                        <div class="font-bold tracking-widest text-brand-900">00:1A:2B</div>
+                        <div class="text-xs font-sans mt-2 text-brand-700 group-hover:text-brand-900">
+                            <strong>First 24 bits: OUI</strong><br>
+                            Assigned by IEEE to the Vendor
+                        </div>
+                    </div>
+                    <div class="flex-1 bg-white p-4 hover:bg-brand-50 transition-colors group cursor-pointer border-t sm:border-t-0 sm:border-l border-brand-800">
+                        <div class="font-bold tracking-widest text-brand-900">3C:4D:5E</div>
+                        <div class="text-xs font-sans mt-2 text-brand-700 group-hover:text-brand-900">
+                            <strong>Last 24 bits: NIC-Specific</strong><br>
+                            Assigned by Vendor to the Card
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 p-4 bg-brand-50 rounded-lg text-sm border border-brand-100">
+                    <strong>Key Bits (First Byte):</strong><br>
+                    <ul class="list-disc ml-5 mt-2 space-y-1">
+                        <li>Bit 0: 0 = Unicast, 1 = Multicast/Broadcast</li>
+                        <li>Bit 1: 0 = Factory Burn-in, 1 = Locally Administered (Randomized)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-brand-200">
+                <h3 class="text-xl font-bold mb-4">Ethernet Frame Anatomy</h3>
+                <p class="mb-6 text-sm text-brand-600">Click on any frame segment to view its purpose and size. Notice how the Destination MAC is read first for rapid sorting.</p>
+                
+                <div class="flex flex-wrap gap-2 mb-6" id="frame-container">
+                    <button class="frame-part px-3 py-2 border-2 border-brand-300 rounded text-sm font-semibold hover:border-brand-500 transition-colors bg-brand-50 text-brand-800" data-field="preamble">Preamble</button>
+                    <button class="frame-part active px-3 py-2 border-2 border-brand-500 rounded text-sm font-semibold hover:border-brand-500 transition-colors bg-brand-400 text-white shadow-sm" data-field="dest">Dest MAC</button>
+                    <button class="frame-part px-3 py-2 border-2 border-brand-300 rounded text-sm font-semibold hover:border-brand-500 transition-colors bg-brand-50 text-brand-800" data-field="src">Src MAC</button>
+                    <button class="frame-part px-3 py-2 border-2 border-brand-300 rounded text-sm font-semibold hover:border-brand-500 transition-colors bg-brand-50 text-brand-800" data-field="type">EtherType</button>
+                    <button class="frame-part px-3 py-2 border-2 border-brand-300 rounded text-sm font-semibold hover:border-brand-500 transition-colors bg-brand-50 flex-grow text-brand-800" data-field="payload">Payload (Data)</button>
+                    <button class="frame-part px-3 py-2 border-2 border-brand-300 rounded text-sm font-semibold hover:border-brand-500 transition-colors bg-brand-50 text-brand-800" data-field="fcs">FCS</button>
+                </div>
+
+                <div id="frame-details" class="p-5 bg-brand-50 rounded-xl border border-brand-200 min-h-[120px]">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 id="fd-title" class="font-bold text-lg text-brand-900">Destination MAC</h4>
+                        <span id="fd-size" class="text-xs font-mono bg-white px-2 py-1 rounded border border-brand-200">6 Bytes</span>
+                    </div>
+                    <p id="fd-desc" class="text-sm text-brand-800">Read first by the NIC. Allows the receiver to decide in microseconds whether to process the rest of the frame or drop it.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="encapsulation" class="scroll-mt-24">
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold mb-4 flex items-center gap-3">
+                <span class="bg-brand-800 text-white w-10 h-10 flex items-center justify-center rounded-lg text-xl shadow-md">2</span>
+                The Journey: Encapsulation
+            </h2>
+            <p class="text-lg text-brand-700 leading-relaxed max-w-4xl">
+                Data doesn't travel naked. As data moves down the OSI stack, each layer adds its own specific header containing routing and handling instructions. When it moves back up at the destination, headers are stripped. Observe how an application request gets wrapped for transmission.
+            </p>
+        </div>
+
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-200">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="space-y-3">
+                    <h3 class="font-bold text-xl mb-4">The OSI Stack (Top Down)</h3>
+                    
+                    <button class="layer-btn w-full text-left p-4 rounded-xl border-2 border-brand-100 hover:border-brand-400 hover:bg-brand-50 transition-all flex justify-between items-center group" data-layer="l7">
+                        <div>
+                            <span class="font-bold text-brand-900">L7 — Application</span>
+                        </div>
+                        <span class="text-sm text-brand-500 group-hover:text-brand-800">Data</span>
+                    </button>
+
+                    <button class="layer-btn w-full text-left p-4 rounded-xl border-2 border-brand-100 hover:border-brand-400 hover:bg-brand-50 transition-all flex justify-between items-center group" data-layer="l4">
+                        <div>
+                            <span class="font-bold text-brand-900">L4 — Transport</span>
+                        </div>
+                        <span class="text-sm text-brand-500 group-hover:text-brand-800">Segments (Ports)</span>
+                    </button>
+
+                    <button class="layer-btn w-full text-left p-4 rounded-xl border-2 border-brand-100 hover:border-brand-400 hover:bg-brand-50 transition-all flex justify-between items-center group active-layer bg-brand-50 border-brand-400" data-layer="l3">
+                        <div>
+                            <span class="font-bold text-brand-900">L3 — Network</span>
+                        </div>
+                        <span class="text-sm text-brand-500 group-hover:text-brand-800">Packets (IPs)</span>
+                    </button>
+
+                    <button class="layer-btn w-full text-left p-4 rounded-xl border-2 border-brand-100 hover:border-brand-400 hover:bg-brand-50 transition-all flex justify-between items-center group" data-layer="l2">
+                        <div>
+                            <span class="font-bold text-brand-900">L2 — Data Link</span>
+                        </div>
+                        <span class="text-sm text-brand-500 group-hover:text-brand-800">Frames (MACs)</span>
+                    </button>
+                    
+                    <button class="layer-btn w-full text-left p-4 rounded-xl border-2 border-brand-100 hover:border-brand-400 hover:bg-brand-50 transition-all flex justify-between items-center group" data-layer="l1">
+                        <div>
+                            <span class="font-bold text-brand-900">L1 — Physical</span>
+                        </div>
+                        <span class="text-sm text-brand-500 group-hover:text-brand-800">Bits (Wire/Air)</span>
+                    </button>
+                </div>
+
+                <div class="bg-stone-800 rounded-2xl p-6 text-stone-100 font-mono relative overflow-hidden shadow-xl h-full flex flex-col justify-center">
+                    <div class="absolute top-0 right-0 bg-stone-700 text-xs px-3 py-1 rounded-bl-xl">Packet Sniffer View</div>
+                    <div class="space-y-4">
+                        <div id="view-l2" class="opacity-30 transition-opacity duration-300">
+                            <span class="text-blue-400">[Ethernet Header]</span><br>
+                            <span class="text-xs text-stone-400 pl-4">Src: AA:BB, Dst: 00:1A</span>
+                        </div>
+                        <div id="view-l3" class="opacity-100 transition-opacity duration-300 border-l-2 border-green-500 pl-2">
+                            <span class="text-green-400">[IP Header]</span><br>
+                            <span class="text-xs text-stone-400 pl-4">Src: 192.168.1.10, Dst: 93.184.216.34</span>
+                        </div>
+                        <div id="view-l4" class="opacity-100 transition-opacity duration-300 border-l-2 border-yellow-500 pl-2">
+                            <span class="text-yellow-400">[TCP/UDP Header]</span><br>
+                            <span class="text-xs text-stone-400 pl-4">Src Port: 51234, Dst Port: 80</span>
+                        </div>
+                        <div id="view-l7" class="opacity-100 transition-opacity duration-300 border-l-2 border-pink-500 pl-2">
+                            <span class="text-pink-400">[Payload Data]</span><br>
+                            <span class="text-xs text-stone-400 pl-4">GET /index.html HTTP/1.1</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 pt-4 border-t border-stone-700 text-sm text-stone-300">
+                        <strong>Rule:</strong> <span id="encap-rule">Going down adds headers. L3 stays the same end-to-end.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="boundaries" class="scroll-mt-24">
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold mb-4 flex items-center gap-3">
+                <span class="bg-brand-800 text-white w-10 h-10 flex items-center justify-center rounded-lg text-xl shadow-md">3</span>
+                Boundaries & Protocols
+            </h2>
+            <p class="text-lg text-brand-700 leading-relaxed max-w-4xl">
+                A broadcast frame (Destination MAC FF:FF:FF:FF:FF:FF) forces every NIC to read it. How the network equipment handles these shouts dictates network performance and security. We also explore the tables that make switching and routing possible.
+            </p>
+        </div>
+
+        <div class="grid lg:grid-cols-5 gap-8">
+            <div class="lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-brand-200">
+                <div class="flex justify-between items-end mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold">Broadcast Containment</h3>
+                        <p class="text-sm text-brand-600">Select a central device and trigger a broadcast to see the domain boundary.</p>
+                    </div>
+                    <button id="btn-broadcast" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm">
+                        📣 Send Broadcast
+                    </button>
+                </div>
+
+                <div class="flex gap-2 mb-8 bg-brand-50 p-1 rounded-lg">
+                    <button class="device-toggle flex-1 py-2 rounded-md text-sm font-semibold transition-colors bg-white shadow-sm text-brand-900 border border-brand-200" data-type="hub">Hub (L1)</button>
+                    <button class="device-toggle flex-1 py-2 rounded-md text-sm font-semibold transition-colors text-brand-600 hover:text-brand-900" data-type="switch">Switch (L2)</button>
+                    <button class="device-toggle flex-1 py-2 rounded-md text-sm font-semibold transition-colors text-brand-600 hover:text-brand-900" data-type="router">Router (L3)</button>
+                </div>
+
+                <div class="relative h-64 bg-stone-100 rounded-xl border-2 border-dashed border-stone-300 flex items-center justify-center p-4">
+                    <div id="sim-center" class="absolute z-10 bg-brand-800 text-white px-4 py-3 rounded-lg font-bold shadow-lg text-center">
+                        HUB<br><span class="text-xs font-normal">Forwards Everything</span>
+                    </div>
+                    
+                    <div class="absolute top-4 left-4 w-16 text-center">
+                        <div id="node-src" class="w-12 h-12 bg-white border-2 border-brand-400 rounded-full mx-auto flex items-center justify-center text-xl shadow-sm broadcast-node z-20 relative">💻</div>
+                        <span class="text-xs font-bold mt-1 block">Sender</span>
+                    </div>
+
+                    <div class="absolute top-4 right-4 w-16 text-center">
+                        <div id="node-1" class="w-12 h-12 bg-white border-2 border-stone-300 rounded-full mx-auto flex items-center justify-center text-xl shadow-sm broadcast-node">🖥️</div>
+                        <span class="text-xs text-stone-500 mt-1 block">PC 1</span>
+                    </div>
+                    
+                    <div class="absolute bottom-4 left-4 w-16 text-center">
+                        <div id="node-2" class="w-12 h-12 bg-white border-2 border-stone-300 rounded-full mx-auto flex items-center justify-center text-xl shadow-sm broadcast-node">🖨️</div>
+                        <span class="text-xs text-stone-500 mt-1 block">Printer</span>
+                    </div>
+
+                    <div class="absolute bottom-4 right-4 w-16 text-center">
+                        <div id="node-3" class="w-12 h-12 bg-white border-2 border-stone-300 rounded-full mx-auto flex items-center justify-center text-xl shadow-sm broadcast-node">🌐</div>
+                        <span class="text-xs text-stone-500 mt-1 block">Internet</span>
+                    </div>
+                    
+                    <svg class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: 0;">
+                        <line x1="20%" y1="25%" x2="50%" y2="50%" stroke="#d7c0ab" stroke-width="2" />
+                        <line x1="80%" y1="25%" x2="50%" y2="50%" stroke="#d7c0ab" stroke-width="2" />
+                        <line x1="20%" y1="75%" x2="50%" y2="50%" stroke="#d7c0ab" stroke-width="2" />
+                        <line x1="80%" y1="75%" x2="50%" y2="50%" stroke="#d7c0ab" stroke-width="2" />
+                    </svg>
+                </div>
+                <div class="mt-4 text-center text-sm font-medium text-brand-800" id="sim-desc">
+                    A broadcast domain ends at a router. Hubs forward to all.
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-brand-200 h-1/2 flex flex-col justify-center">
+                    <h4 class="font-bold text-brand-900 mb-2 border-b border-brand-100 pb-2">📖 ARP Table</h4>
+                    <p class="text-sm text-brand-700 mb-3">Your address book. Maps IP Addresses to MAC Addresses. Lives on end hosts and routers.</p>
+                    <div class="bg-brand-50 p-3 rounded font-mono text-xs overflow-x-auto text-brand-800">
+                        Internet Address  Physical Address<br>
+                        192.168.1.1       00:1A:2B:3C:4D:5E<br>
+                        192.168.1.10      AA:BB:CC:11:22:33
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-brand-200 h-1/2 flex flex-col justify-center">
+                    <h4 class="font-bold text-brand-900 mb-2 border-b border-brand-100 pb-2">🎛️ MAC Table (CAM)</h4>
+                    <p class="text-sm text-brand-700 mb-3">The switchboard. Maps MAC Addresses to physical switch ports. Lives only on switches.</p>
+                    <div class="bg-brand-50 p-3 rounded font-mono text-xs overflow-x-auto text-brand-800">
+                        VLAN  MAC Address        Port<br>
+                        1     00:1A:2B:3C:4D:5E  Gi0/1<br>
+                        1     AA:BB:CC:11:22:33  Fa0/3
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="routing" class="scroll-mt-24 pb-10">
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold mb-4 flex items-center gap-3">
+                <span class="bg-brand-800 text-white w-10 h-10 flex items-center justify-center rounded-lg text-xl shadow-md">4</span>
+                Network Design & Routing
+            </h2>
+            <p class="text-lg text-brand-700 leading-relaxed max-w-4xl">
+                For traffic to cross boundaries, networks are built hierarchically and routers use routing tables to find the best path. When multiple sources provide a path, the router trusts the one with the lowest Administrative Distance (AD).
+            </p>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-8 items-start">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-brand-200">
+                <h3 class="text-xl font-bold mb-4">3-Layer Hierarchical Design</h3>
+                <p class="mb-6 text-sm text-brand-600">The standard for scalable, predictable network builds.</p>
+                
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-4 bg-brand-50 p-4 rounded-xl border border-brand-200 interactive-card">
+                        <div class="font-bold text-brand-900 w-24 text-right">Core</div>
+                        <div class="h-8 w-2 bg-brand-600 rounded-full"></div>
+                        <div class="flex-1 text-sm text-brand-800">
+                            <strong>High-speed backbone.</strong><br> Redundant L3 routers linking distribution blocks.
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 bg-brand-50 p-4 rounded-xl border border-brand-200 interactive-card">
+                        <div class="font-bold text-brand-900 w-24 text-right">Distribution</div>
+                        <div class="h-8 w-2 bg-brand-400 rounded-full"></div>
+                        <div class="flex-1 text-sm text-brand-800">
+                            <strong>Policy & Routing.</strong><br> L3 Switches. Applies ACLs, inter-VLAN routing.
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 bg-brand-50 p-4 rounded-xl border border-brand-200 interactive-card">
+                        <div class="font-bold text-brand-900 w-24 text-right">Access</div>
+                        <div class="h-8 w-2 bg-brand-200 rounded-full"></div>
+                        <div class="flex-1 text-sm text-brand-800">
+                            <strong>End-user connection.</strong><br> Many-port L2 switches for PCs, phones, APs.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-brand-200">
+                <h3 class="text-xl font-bold mb-2">Administrative Distance (AD)</h3>
+                <p class="text-sm text-brand-600 mb-4">The router's "trust rating" for a route source. <strong>Lower is better.</strong> Notice how Static beats dynamic protocols like OSPF.</p>
+                
+                <div class="chart-container">
+                    <canvas id="adChart"></canvas>
+                </div>
+                
+                <div class="mt-4 text-xs text-brand-500 text-center">
+                    Data based on standard Cisco IOS default AD values.
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<footer class="bg-brand-900 text-brand-100 py-12 mt-12 border-t-4 border-brand-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h4 class="text-xl font-bold mb-6 text-white">Three Sentences to Remember Forever</h4>
+        <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-10 text-sm font-medium">
+            <div class="p-4 bg-brand-800 rounded-lg border border-brand-700">A switch forwards broadcasts; a router blocks them.</div>
+            <div class="p-4 bg-brand-800 rounded-lg border border-brand-700">IP gets you there; MAC gets you to the next hop.</div>
+            <div class="p-4 bg-brand-800 rounded-lg border border-brand-700">Every router only knows the next hop, never the whole path.</div>
+        </div>
+        <p class="text-sm text-brand-400">Cyber.SoHo Educational Hub © 2026 — From the Industry to the Classroom.</p>
+    </div>
+</footer>
+
+<script>
+    const frameData = {
+        'preamble': { title: 'Preamble + SFD', size: '8 Bytes', desc: 'Receiver clock sync. The NIC reads this to lock onto the signal timing, then strips it before handing the frame to the OS.' },
+        'dest': { title: 'Destination MAC', size: '6 Bytes', desc: 'Read first. Allows the receiver to decide in microseconds whether to read the rest of the frame or drop it immediately.' },
+        'src': { title: 'Source MAC', size: '6 Bytes', desc: 'Where to send the reply. The switch uses this field to build its MAC/CAM table.' },
+        'type': { title: 'EtherType', size: '2 Bytes', desc: 'Tells the receiver what is inside the payload. (e.g., IPv4 = 0x0800, ARP = 0x0806).' },
+        'payload': { title: 'Payload', size: '46–1500 Bytes', desc: 'The actual data being transmitted (the IP packet). Padded if under 46 bytes. Max MTU is typically 1500.' },
+        'fcs': { title: 'FCS (CRC-32)', size: '4 Bytes', desc: 'Tamper and corruption check. If the calculated hash doesn\'t match this field, the frame is silently dropped.' }
+    };
+
+    document.querySelectorAll('.frame-part').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.frame-part').forEach(b => {
+                b.classList.remove('active', 'bg-brand-400', 'text-white', 'shadow-sm');
+                b.classList.add('bg-brand-50', 'text-brand-800');
+            });
+            this.classList.add('active', 'bg-brand-400', 'text-white', 'shadow-sm');
+            this.classList.remove('bg-brand-50', 'text-brand-800');
+            
+            const field = this.getAttribute('data-field');
+            document.getElementById('fd-title').innerText = frameData[field].title;
+            document.getElementById('fd-size').innerText = frameData[field].size;
+            document.getElementById('fd-desc').innerText = frameData[field].desc;
+        });
+    });
+
+    const encapRules = {
+        'l7': 'L7: Application generates the raw data payload.',
+        'l4': 'L4: Adds Port numbers to track which application gets the data.',
+        'l3': 'L3: Adds IP Addresses. This header stays the same end-to-end.',
+        'l2': 'L2: Adds MAC Addresses. This header gets rewritten at every router hop.',
+        'l1': 'L1: Converts the constructed frame into physical signals.'
+    };
+
+    document.querySelectorAll('.layer-btn').forEach(btn => {
+        btn.addEventListener('mouseenter', function() {
+            document.querySelectorAll('.layer-btn').forEach(b => {
+                b.classList.remove('active-layer', 'bg-brand-50', 'border-brand-400');
+            });
+            this.classList.add('active-layer', 'bg-brand-50', 'border-brand-400');
+            
+            const layer = this.getAttribute('data-layer');
+            document.getElementById('encap-rule').innerText = encapRules[layer];
+            
+            const views = ['l7', 'l4', 'l3', 'l2'];
+            let shouldShow = false;
+            
+            if(layer === 'l1') {
+                views.forEach(v => document.getElementById(`view-${v}`)?.classList.replace('opacity-30', 'opacity-100'));
+                return;
+            }
+
+            views.forEach(v => {
+                const el = document.getElementById(`view-${v}`);
+                if (!el) return;
+                
+                if (v === layer) {
+                    shouldShow = true;
+                    el.classList.replace('opacity-30', 'opacity-100');
+                } else if (shouldShow) {
+                    el.classList.replace('opacity-30', 'opacity-100');
+                } else {
+                    el.classList.replace('opacity-100', 'opacity-30');
+                }
+            });
+        });
+    });
+
+    let currentDevice = 'hub';
+    const simCenter = document.getElementById('sim-center');
+    const simDesc = document.getElementById('sim-desc');
+    const nodes = [document.getElementById('node-1'), document.getElementById('node-2'), document.getElementById('node-3')];
+    const node3 = document.getElementById('node-3');
+
+    document.querySelectorAll('.device-toggle').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.device-toggle').forEach(b => {
+                b.classList.remove('bg-white', 'shadow-sm', 'text-brand-900', 'border', 'border-brand-200');
+                b.classList.add('text-brand-600');
+            });
+            this.classList.add('bg-white', 'shadow-sm', 'text-brand-900', 'border', 'border-brand-200');
+            this.classList.remove('text-brand-600');
+            
+            currentDevice = this.getAttribute('data-type');
+            
+            if(currentDevice === 'hub') {
+                simCenter.innerHTML = 'HUB<br><span class="text-xs font-normal">Forwards Everything (L1)</span>';
+                simCenter.className = 'absolute z-10 bg-stone-500 text-white px-4 py-3 rounded-lg font-bold shadow-lg text-center';
+                simDesc.innerText = 'Hubs repeat electrical signals to all ports. Total collision domain.';
+            } else if (currentDevice === 'switch') {
+                simCenter.innerHTML = 'SWITCH<br><span class="text-xs font-normal">Forwards Broadcasts (L2)</span>';
+                simCenter.className = 'absolute z-10 bg-brand-600 text-white px-4 py-3 rounded-lg font-bold shadow-lg text-center';
+                simDesc.innerText = 'Switches flood FF:FF:FF:FF:FF:FF out every port except the sender. Open restaurant.';
+            } else {
+                simCenter.innerHTML = 'ROUTER<br><span class="text-xs font-normal">Drops Broadcasts (L3)</span>';
+                simCenter.className = 'absolute z-10 bg-brand-900 text-white px-4 py-3 rounded-lg font-bold shadow-lg text-center';
+                simDesc.innerText = 'A router blocks Layer 2 broadcasts from crossing into other networks. Heavy door.';
+            }
+        });
+    });
+
+    document.getElementById('btn-broadcast').addEventListener('click', function() {
+        this.disabled = true;
+        this.classList.replace('bg-brand-600', 'bg-stone-400');
+        
+        document.getElementById('node-src').classList.add('broadcast-active');
+        
+        setTimeout(() => {
+            if(currentDevice === 'hub' || currentDevice === 'switch') {
+                nodes.forEach(n => n.classList.add('broadcast-active'));
+            } else if (currentDevice === 'router') {
+                node3.classList.remove('broadcast-active');
+            }
+            
+            setTimeout(() => {
+                document.getElementById('node-src').classList.remove('broadcast-active');
+                nodes.forEach(n => n.classList.remove('broadcast-active'));
+                
+                this.disabled = false;
+                this.classList.replace('bg-stone-400', 'bg-brand-600');
+            }, 1500);
+            
+        }, 500);
+    });
+
+    const ctx = document.getElementById('adChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Connected', 'Static', 'eBGP', 'EIGRP', 'OSPF', 'RIP', 'iBGP'],
+            datasets: [{
+                label: 'Administrative Distance',
+                data: [0, 1, 20, 90, 110, 120, 200],
+                backgroundColor: [
+                    '#5c3a2e',
+                    '#714636',
+                    '#8a553f',
+                    '#a56c4b',
+                    '#b2835c',
+                    '#c29e80',
+                    '#d7c0ab'
+                ],
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return ' AD Score: ' + context.raw + ' (Lower wins)';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Distance Value (Trust Rating)',
+                        font: { family: 'Inter', weight: 'bold' }
+                    },
+                    max: 250
+                },
+                y: {
+                    ticks: {
+                        font: { family: 'Inter', weight: '600' }
+                    }
+                }
+            }
+        }
+    });
+</script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Study Guide: Ethernet & Routing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 3D Flip Card CSS */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        .flashcard-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Ethernet & Routing Fundamentals</h1>
+            <p class="text-slate-600">Interactive Study Guide</p>
+        </header>
+
+        <div class="flex justify-center border-b border-slate-300 mb-8">
+            <button id="btn-flashcards" class="tab-btn px-6 py-3 text-lg font-semibold text-blue-600 border-b-2 border-blue-600 hover:bg-blue-50 transition-colors" onclick="switchTab('flashcards')">
+                Flashcards (25)
+            </button>
+            <button id="btn-quiz" class="tab-btn px-6 py-3 text-lg font-semibold text-slate-500 border-b-2 border-transparent hover:text-blue-600 hover:bg-blue-50 transition-colors" onclick="switchTab('quiz')">
+                Practice Quiz (10)
+            </button>
+        </div>
+
+        <div id="tab-flashcards" class="tab-content block">
+            <div class="mb-6 text-center text-sm text-slate-500">Click any card to flip it and reveal the answer.</div>
+            <div id="flashcards-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+        </div>
+
+        <div id="tab-quiz" class="tab-content hidden max-w-3xl mx-auto">
+            <div class="mb-6 text-center text-sm text-slate-500">Select an answer to see the rationale.</div>
+            <div id="quiz-container" class="space-y-10">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data Definitions ---
+
+        const flashcardsData = [
+            { f: "MAC Address size", b: "48 bits, typically formatted as six pairs of hexadecimal digits (e.g., 00:1A:2B:3C:4D:5E)." },
+            { f: "First 24 bits of a MAC address", b: "The OUI (Organisationally Unique Identifier), assigned by the IEEE to the vendor." },
+            { f: "Last 24 bits of a MAC address", b: "The NIC-specific portion, assigned by the vendor to the individual network card." },
+            { f: "First field read in an Ethernet frame", b: "Destination MAC, which allows the receiver to make a rapid decision on whether to read or drop the rest of the frame." },
+            { f: "EtherType field purpose", b: "Indicates the protocol encapsulated inside the payload, such as IPv4 (0x0800) or ARP (0x0806)." },
+            { f: "Minimum and Maximum Ethernet payload sizes", b: "Minimum is 46 bytes (padded if smaller), and maximum (MTU) is 1500 bytes." },
+            { f: "Ethernet Frame Check Sequence (FCS)", b: "A 4-byte CRC-32 hash used to check for tampering or corruption; frames failing this check are silently dropped." },
+            { f: "Behavior of L2 vs L3 headers end-to-end", b: "Layer 2 headers change at every hop, while Layer 3 headers stay the same from end to end." },
+            { f: "Layer 2 Broadcast MAC Address", b: "FF:FF:FF:FF:FF:FF" },
+            { f: "Device behavior with broadcasts (Hub vs Switch vs Router)", b: "Hubs forward to all ports, Switches forward out every port (except source), and Routers drop them at the interface." },
+            { f: "Broadcast Domain boundary", b: "Ends at a router or at a VLAN boundary." },
+            { f: "ARP (Address Resolution Protocol)", b: "Translates a known IP address to an unknown MAC address on the local segment." },
+            { f: "ICMP Type 8 and Type 0", b: "Echo Request (Type 8) and Echo Reply (Type 0), commonly used by the ping utility." },
+            { f: "ARP Table vs MAC Table contents", b: "The ARP table maps IPs to MACs (on hosts/routers), while the MAC table maps MACs to switch ports (only on switches)." },
+            { f: "Access Layer in the 3-Tier Design Model", b: "The tier where end users (PCs, phones, APs) connect, typically using many-port Layer 2 switches." },
+            { f: "Core Layer in the 3-Tier Design Model", b: "A fast, highly redundant backbone that links distribution blocks together." },
+            { f: "Primary reasons to contain broadcasts", b: "To improve performance (less CPU interrupts), increase security (smaller attack surface), and ensure network stability." },
+            { f: "Four steps of the DHCP process", b: "DORA: Discover, Offer, Request, ACK." },
+            { f: "Router data rewrite behavior at each hop", b: "The router rewrites the Ethernet (L2) header (Source/Dest MAC) and decrements the TTL, but leaves the IP (L3) header addresses alone." },
+            { f: "Administrative Distance (AD)", b: "A router's \"trust rating\" for a routing source; lower numbers are more preferred." },
+            { f: "Administrative Distance of a Directly Connected route", b: "0" },
+            { f: "Administrative Distance of a Static route", b: "1" },
+            { f: "Administrative Distance of OSPF", b: "110" },
+            { f: "Three steps of route selection hierarchy", b: "1. Longest prefix match, 2. Lowest Administrative Distance (AD), 3. Lowest metric." },
+            { f: "Fields that change at every Layer 3 hop", b: "Source MAC, Destination MAC, TTL, and the Ethernet FCS." }
+        ];
+
+        const quizData = [
+            {
+                q: "A network interface card (NIC) receives a frame from the wire. How does the hardware rapidly decide whether it needs to process the entire frame or drop it?",
+                hint: "Consider the physical order in which data fields arrive on the wire immediately after the preamble.",
+                options: [
+                    { t: "It reads the Destination MAC address first.", r: "Placing the target hardware address at the very beginning of the frame allows the receiving NIC to instantly verify if it is the intended recipient before dedicating resources to the rest of the data.", c: true },
+                    { t: "It checks the Frame Check Sequence (FCS) first.", r: "The tamper-checking hash is located at the very end of the frame, meaning the entire payload must be read before this validation can occur.", c: false },
+                    { t: "It inspects the Destination IP address in the payload.", r: "Layer 3 information is buried deep within the payload, requiring the hardware to pass the data up the OSI stack before it can be parsed.", c: false },
+                    { t: "It reads the Source MAC address first.", r: "While important for switches to learn topology, the sender's address does not help a receiving host determine if the message is meant for them.", c: false }
+                ]
+            },
+            {
+                q: "A user's PC (IP: 192.168.10.5) attempts to ping a remote web server (IP: 93.184.216.34). What will be the Destination MAC address in the Ethernet frame leaving the PC?",
+                hint: "Remember the mantra regarding what addressing scheme gets you to the final destination versus the immediate next step.",
+                options: [
+                    { t: "The MAC address of the default gateway.", r: "Because the final destination is on a different subnet, the local hardware must forward the frame to the router, which acts as the exit point for the local broadcast domain.", c: true },
+                    { t: "The MAC address of the web server.", r: "Hardware addresses cannot cross router boundaries, and the local PC has no way to resolve a remote MAC address.", c: false },
+                    { t: "FF:FF:FF:FF:FF:FF", r: "This implies a network-wide broadcast, but standard ICMP echo requests are unicast messages intended for a specific endpoint.", c: false },
+                    { t: "00:00:00:00:00:00", r: "This represents a null or unassigned hardware address, which would not be routable or deliverable on the local segment.", c: false }
+                ]
+            },
+            {
+                q: "A switch receives an incoming frame on Port 2 with a Source MAC of AA:AA:AA:AA:AA:AA and a Destination MAC of BB:BB:BB:BB:BB:BB. The MAC table currently has no entry for BB:BB:BB:BB:BB:BB. How does the switch handle this?",
+                hint: "Switches use incoming data to learn about the network, but they must still ensure the current message reaches an unknown destination.",
+                options: [
+                    { t: "It maps AA:AA:AA:AA:AA:AA to Port 2 and floods the frame out all other ports.", r: "Switches build their CAM tables dynamically by observing sender addresses, and utilize unknown unicast flooding to guarantee delivery when the target's location is unmapped.", c: true },
+                    { t: "It maps BB:BB:BB:BB:BB:BB to Port 2 and floods the frame.", r: "Mapping the target address to the port where the sender is located would cause all future traffic for the target to be routed back to the sender.", c: false },
+                    { t: "It drops the frame entirely.", r: "Unlike routers handling unknown IP routes, Layer 2 devices are designed to broadcast traffic when unsure, ensuring connectivity over absolute efficiency.", c: false },
+                    { t: "It sends an ARP request for BB:BB:BB:BB:BB:BB.", r: "Address Resolution Protocol is a Layer 3 to Layer 2 mapping function used by endpoints and routers, not by intermediate Layer 2 forwarding devices during transit.", c: false }
+                ]
+            },
+            {
+                q: "A router is evaluating its routing table to determine the best path to 10.1.1.0/24. It has one path learned via OSPF and another path configured statically by the administrator. Which path will it choose and why?",
+                hint: "Consider the 'trust rating' system used by networking equipment to evaluate different sources of routing information.",
+                options: [
+                    { t: "The Static route, because it has a lower Administrative Distance.", r: "The routing logic prioritizes sources with lower trust values, giving manually entered routes an inherent preference over dynamic protocols.", c: true },
+                    { t: "The OSPF route, because dynamic protocols adapt and override static configurations.", r: "While dynamic protocols adjust to topology changes, their default trust rating is deliberately set higher than manual administrative entries.", c: false },
+                    { t: "The Static route, because it has a higher Administrative Distance.", r: "In the routing trust hierarchy, higher values indicate less reliable sources, meaning a higher score would lose the tie-breaker.", c: false },
+                    { t: "It will load-balance the traffic evenly across both paths.", r: "Load balancing typically occurs when multiple paths have the exact same protocol, metric, and trust rating, not when comparing entirely different sources.", c: false }
+                ]
+            },
+            {
+                q: "As a packet travels across the internet through multiple routers, which specific fields are modified at every single Layer 3 hop?",
+                hint: "Think about the border-crossing analogy: what represents the permanent address label, and what represents the local delivery truck?",
+                options: [
+                    { t: "Source MAC, Destination MAC, TTL, and FCS.", r: "The Layer 2 envelope is entirely discarded and rebuilt to facilitate the next physical jump, while the Time-To-Live counter is decremented to prevent infinite loops.", c: true },
+                    { t: "Source IP, Destination IP, and TTL.", r: "The logical addressing must remain intact from end to end so the final recipient can be reached and can identify the original sender.", c: false },
+                    { t: "Source MAC and Destination IP.", r: "Modifying the final target address in transit would prevent the data from ever reaching its intended endpoint.", c: false },
+                    { t: "EtherType and Payload data.", r: "The underlying protocol indicator and the actual application data must remain pristine and unmodified by transit infrastructure.", c: false }
+                ]
+            },
+            {
+                q: "A large open-plan office is experiencing network instability because 500 devices are constantly processing each other's ARP requests. What is the most effective architectural change to contain this traffic?",
+                hint: "You need to implement a 'heavy door' that inherently refuses to forward traffic addressed to FF:FF:FF:FF:FF:FF.",
+                options: [
+                    { t: "Implement a Router or Layer 3 Switch to divide the network into subnets.", r: "Devices operating at the Network layer natively terminate broadcast domains, preventing noisy discovery protocols from flooding adjacent segments.", c: true },
+                    { t: "Replace the existing access hardware with high-speed Layer 2 Switches.", r: "While modern switching provides dedicated bandwidth, it still faithfully duplicates and forwards all broadcast frames to every connected port.", c: false },
+                    { t: "Increase the network's Maximum Transmission Unit (MTU) to 1500 bytes.", r: "Adjusting payload capacity affects the efficiency of large file transfers but does nothing to stop the propagation of discovery broadcasts.", c: false },
+                    { t: "Install legacy Hubs at the Distribution layer to speed up transit.", r: "This would worsen the problem by turning the entire topology into a single collision domain, electrically repeating every signal to every port.", c: false }
+                ]
+            },
+            {
+                q: "While analyzing a network capture in Wireshark, you observe a packet with a Source IP of 0.0.0.0 and a Destination IP of 255.255.255.255. Based on the DORA process, what is this message?",
+                hint: "This represents a device shouting 'Anyone? I have no IP' into the local network.",
+                options: [
+                    { t: "A DHCP Discover message.", r: "Because the client has not yet been assigned an identity and does not know the address of the server, it must broadcast universally at both Layer 2 and Layer 3.", c: true },
+                    { t: "A DHCP Offer message.", r: "This step comes from the server, which already has a valid source IP address to include in the packet header.", c: false },
+                    { t: "A DHCP Request message.", r: "While this step also utilizes broadcasting to formalize acceptance, the initial unknown state is characteristic of the very first step in the negotiation.", c: false },
+                    { t: "An ARP Request message.", r: "Address resolution occurs when a device already has an IP address and is looking for a peer's hardware address, not when attempting to lease an IP.", c: false }
+                ]
+            },
+            {
+                q: "When building a campus network using the 3-Layer Hierarchical Design Model, what is the critical redundancy rule to ensure fault containment?",
+                hint: "Consider which tier, if taken offline, would isolate the entire campus rather than just a single classroom.",
+                options: [
+                    { t: "The Core layer must be built redundantly with at least two devices.", r: "Because the backbone aggregates all traffic between distribution blocks, eliminating single points of failure here is vital for overall campus survival.", c: true },
+                    { t: "Every Access layer switch must physically connect to every other Access switch.", r: "Creating a full mesh at the user edge defeats the purpose of a hierarchy, leading to massive spanning tree complexities and routing loops.", c: false },
+                    { t: "The Distribution layer should utilize legacy Hubs for immediate failover.", r: "Physical layer repeaters offer no routing intelligence or policy enforcement, which are the primary functions of the middle tier.", c: false },
+                    { t: "Access layer switches must operate using Layer 3 routing protocols.", r: "The edge tier is typically focused purely on high-density Layer 2 port connectivity for end users, leaving complex routing to the tiers above.", c: false }
+                ]
+            },
+            {
+                q: "You need to see the mapping of local IP addresses to hardware addresses on a Windows workstation. Which table holds this information, and how does the workstation populate it?",
+                hint: "Think of this as the workstation's personal address book for its immediate neighbors.",
+                options: [
+                    { t: "The ARP Table, populated by broadcasting requests and caching the unicast replies.", r: "End hosts dynamically build this local directory by asking the network who owns a specific logical address and saving the resulting hardware match for a few minutes.", c: true },
+                    { t: "The MAC Table, populated by inspecting the source addresses of incoming frames.", r: "This is the 'switchboard' mechanism used exclusively by Layer 2 forwarding hardware, not by end-user operating systems.", c: false },
+                    { t: "The Routing Table, populated by dynamic protocols like OSPF.", r: "This directory maps distant network prefixes to outbound interfaces, lacking any granular hardware address information.", c: false },
+                    { t: "The DHCP Table, populated by executing the DORA sequence.", r: "This database tracks active IP leases and is maintained by the allocation server, not individual workstations.", c: false }
+                ]
+            },
+            {
+                q: "An application generates only 20 bytes of payload data to send across the network. According to IEEE 802.3 standards, what happens when this data is encapsulated into an Ethernet frame?",
+                hint: "Hardware standards dictate a strict minimum size for frames to ensure collision detection operates correctly on physical cables.",
+                options: [
+                    { t: "The payload is padded with filler data to reach the minimum size of 46 bytes.", r: "To maintain timing requirements on the physical wire, undersized payloads are artificially expanded before the FCS hash is calculated and appended.", c: true },
+                    { t: "The frame is transmitted immediately as a 20-byte payload to reduce latency.", r: "Sending an undersized frame violates protocol specifications and would be treated as a collision fragment or error by receiving hardware.", c: false },
+                    { t: "The hardware buffers the data and waits for more traffic to fill the 1500-byte MTU.", r: "Network interface cards do not delay transmission to perfectly fill maximum capacity, as this would cause unpredictable application latency.", c: false },
+                    { t: "The preamble is artificially extended to compensate for the missing bytes.", r: "The synchronization sequence is strictly fixed at 8 bytes and cannot be altered to fix payload deficiencies.", c: false }
+                ]
+            }
+        ];
+
+        // --- Render Functions ---
+
+        function renderFlashcards() {
+            const container = document.getElementById('flashcards-container');
+            flashcardsData.forEach((card, index) => {
+                const cardHTML = `
+                    <div class="flashcard perspective-1000 w-full h-48 cursor-pointer group" onclick="this.classList.toggle('flipped')">
+                        <div class="flashcard-inner relative w-full h-full text-center shadow-md rounded-xl transition-shadow hover:shadow-lg">
+                            <div class="absolute w-full h-full backface-hidden bg-white border border-slate-200 rounded-xl flex items-center justify-center p-6 z-20">
+                                <span class="text-xs absolute top-3 left-4 text-slate-400 font-mono">${index + 1}/25</span>
+                                <h3 class="text-lg font-semibold text-slate-800">${card.f}</h3>
+                            </div>
+                            <div class="absolute w-full h-full backface-hidden rotate-y-180 bg-blue-600 text-white rounded-xl flex items-center justify-center p-6 z-10">
+                                <p class="text-md leading-relaxed">${card.b}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHTML;
+            });
+        }
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            quizData.forEach((item, qIndex) => {
+                
+                // Shuffle options for this question
+                let shuffledOptions = [...item.options].sort(() => Math.random() - 0.5);
+
+                let optionsHTML = shuffledOptions.map((opt, oIndex) => {
+                    // Store correct state and rationale as data attributes for easy access
+                    return `
+                        <button 
+                            class="w-full text-left p-4 rounded-lg border border-slate-200 hover:border-blue-400 hover:bg-blue-50 transition-colors mb-3 focus:outline-none"
+                            data-correct="${opt.c}"
+                            onclick="handleQuizAnswer(this, '${opt.r.replace(/'/g, "\\'")}')"
+                        >
+                            ${opt.t}
+                        </button>
+                    `;
+                }).join('');
+
+                const qHTML = `
+                    <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200">
+                        <div class="flex items-start gap-4 mb-4">
+                            <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold">
+                                ${qIndex + 1}
+                            </div>
+                            <h3 class="text-lg font-semibold text-slate-800 pt-1">${item.q}</h3>
+                        </div>
+                        
+                        <div class="ml-0 md:ml-12 mb-6">
+                            <button class="text-sm text-blue-500 hover:text-blue-700 underline mb-4" onclick="this.nextElementSibling.classList.toggle('hidden')">Show Hint</button>
+                            <p class="hidden text-sm text-slate-600 bg-slate-50 p-3 rounded-md border border-slate-100 mb-4 italic">
+                                💡 ${item.hint}
+                            </p>
+
+                            <div class="options-container">
+                                ${optionsHTML}
+                            </div>
+                            
+                            <div class="rationale-box hidden mt-4 p-4 rounded-lg text-sm"></div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += qHTML;
+            });
+        }
+
+        // --- Interaction Logic ---
+
+        function switchTab(tabId) {
+            // Update Buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('text-blue-600', 'border-blue-600');
+                btn.classList.add('text-slate-500', 'border-transparent');
+            });
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            activeBtn.classList.remove('text-slate-500', 'border-transparent');
+            activeBtn.classList.add('text-blue-600', 'border-blue-600');
+
+            // Update Content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+                content.classList.remove('block');
+            });
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabId}`).classList.add('block');
+        }
+
+        function handleQuizAnswer(btn, rationaleText) {
+            // Prevent multiple clicks in the same question container
+            const container = btn.closest('.options-container');
+            const allBtns = container.querySelectorAll('button');
+            allBtns.forEach(b => b.disabled = true); // lock answers
+
+            const isCorrect = btn.getAttribute('data-correct') === 'true';
+            
+            // Highlight selected
+            if (isCorrect) {
+                btn.classList.remove('border-slate-200', 'hover:border-blue-400', 'hover:bg-blue-50');
+                btn.classList.add('border-green-500', 'bg-green-50', 'text-green-800');
+            } else {
+                btn.classList.remove('border-slate-200', 'hover:border-blue-400', 'hover:bg-blue-50');
+                btn.classList.add('border-red-500', 'bg-red-50', 'text-red-800');
+                
+                // Also highlight the correct one so they know what it was
+                allBtns.forEach(b => {
+                    if (b.getAttribute('data-correct') === 'true') {
+                        b.classList.remove('border-slate-200');
+                        b.classList.add('border-green-500', 'bg-green-50', 'text-green-800');
+                    }
+                });
+            }
+
+            // Show rationale
+            const rationaleBox = container.nextElementSibling;
+            rationaleBox.classList.remove('hidden');
+            rationaleBox.innerHTML = `<strong>Explanation:</strong> ${rationaleText}`;
+            if(isCorrect) {
+                 rationaleBox.classList.add('bg-green-100', 'text-green-900');
+            } else {
+                 rationaleBox.classList.add('bg-slate-100', 'text-slate-800');
+            }
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderFlashcards();
+            renderQuiz();
+        });
+
+    </script>
+</body>
+</html>
+
+
+
