@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 04 — IPv4 & IPv6, Sub- and Super-netting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Chosen Palette: Warm Neutrals & Muted Tech. Backgrounds: #FAECE3 (Warm Sand), #FFFFFF. Text: #2D3748 (Slate). Accents: #4A5568 (Cool Gray), #E28743 (Terracotta/Rust for highlights), #319795 (Teal for interactions). -->
+    <!-- Application Structure Plan: A module-based Interactive Study Dashboard. Instead of linear slides, the app is divided into thematic learning modules: 1. IPv4 Anatomy (Interactive binary tools), 2. Subnetting & CIDR (Visual data & cheat sheets), 3. Addressing & NAT (Conceptual breakdown), 4. DHCP & IPv6 (Interactive flow diagrams). This structure allows students to explore concepts non-linearly, use interactive tools to practice core skills (like binary conversion), and view complex data (like CIDR host distributions) visually, enhancing retention and active learning. -->
+    <!-- Visualization & Content Choices: 1. Binary Converter (Goal: Teach 8-bit weights -> Method: Interactive HTML/JS buttons -> Justification: Hands-on learning is best for binary math). 2. Subnet Hosts Chart (Goal: Show exponential decrease of hosts -> Method: Chart.js Bar Chart -> Justification: Visualizes the impact of borrowing bits better than a static table). 3. DORA Process Explorer (Goal: Explain DHCP stages -> Method: Interactive HTML step-flow -> Justification: Breaks down chronological processes without relying on static SVG flowcharts). 4. RFC 1918 & Classes (Goal: Reference data -> Method: HTML Grid/Tables -> Justification: Clean, searchable organization). All methods use HTML/CSS/Canvas exclusively. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #faf8f5; color: #2d3748; }
+        .chart-container { position: relative; width: 100%; max-width: 700px; margin-left: auto; margin-right: auto; height: 350px; max-height: 400px; }
+        @media (max-width: 640px) { .chart-container { height: 250px; } }
+        
+        .nav-btn { transition: all 0.2s ease-in-out; }
+        .nav-btn.active { background-color: #e28743; color: white; border-color: #e28743; }
+        
+        .bit-btn { transition: all 0.15s; }
+        .bit-btn.active { background-color: #319795; color: white; border-color: #285e61; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        
+        .dora-step { transition: all 0.2s; cursor: pointer; }
+        .dora-step:hover { transform: scale(1.02); }
+        .dora-step.active { background-color: #2b6cb0; color: white; }
+
+        .hidden-section { display: none; }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <header class="bg-slate-800 text-white shadow-md z-10 relative">
+        <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight text-[#e28743]">Day 04 — Slide Deck</h1>
+                <h2 class="text-xl font-medium mt-1">IPv4 & IPv6, Sub- and Super-netting</h2>
+                <p class="text-sm text-slate-300 mt-2">Cyber.SoHo Educational Hub • Basics of Computer Networks</p>
+            </div>
+            <div class="mt-4 md:mt-0 text-right bg-slate-700 p-3 rounded-lg border border-slate-600">
+                <p class="text-sm font-semibold text-teal-400">Project Stage 4: Address the Network</p>
+                <p class="text-xs text-slate-300 mt-1">Goal: Look at any IPv4 and tell its subnet without a calculator.</p>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row gap-8">
+        
+        <aside class="w-full md:w-64 shrink-0">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sticky top-6">
+                <h3 class="text-lg font-bold text-slate-700 mb-4 border-b pb-2 uppercase tracking-wider text-sm">Learning Modules</h3>
+                <nav class="flex flex-col space-y-2" id="main-nav">
+                    <button data-target="module-1" class="nav-btn active text-left px-4 py-3 rounded-md border border-slate-200 hover:bg-slate-50 font-medium text-slate-600">1. IPv4 & Binary Math</button>
+                    <button data-target="module-2" class="nav-btn text-left px-4 py-3 rounded-md border border-slate-200 hover:bg-slate-50 font-medium text-slate-600">2. Masks & Subnetting</button>
+                    <button data-target="module-3" class="nav-btn text-left px-4 py-3 rounded-md border border-slate-200 hover:bg-slate-50 font-medium text-slate-600">3. Addressing Types & NAT</button>
+                    <button data-target="module-4" class="nav-btn text-left px-4 py-3 rounded-md border border-slate-200 hover:bg-slate-50 font-medium text-slate-600">4. DHCP & IPv6</button>
+                    <button data-target="module-5" class="nav-btn text-left px-4 py-3 rounded-md border border-slate-200 hover:bg-slate-50 font-medium text-slate-600">5. Workshop & Lab</button>
+                </nav>
+            </div>
+        </aside>
+
+        <main class="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-10" id="content-area">
+            
+            <section id="module-1">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-slate-800 flex items-center">
+                        <span class="text-4xl mr-3 text-[#e28743]">⊞</span> The IPv4 Address & Binary
+                    </h2>
+                    <p class="text-lg text-slate-600 mt-4 leading-relaxed">
+                        This section breaks down the foundational structure of an IPv4 address. Understanding that an IP address is fundamentally a 32-bit binary number split into 4 octets is crucial. Here, you will interact with the core concepts of Binary-to-Decimal conversion, which is the cornerstone of all subnetting operations.
+                    </p>
+                </div>
+
+                <div class="bg-[#faf8f5] rounded-xl p-6 border border-slate-200 mb-8">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">The 32-bit Architecture</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <ul class="space-y-3 text-slate-700">
+                                <li class="flex items-start"><span class="text-teal-600 font-bold mr-2">»</span> 32 bits split into 4 octets of 8 bits each.</li>
+                                <li class="flex items-start"><span class="text-teal-600 font-bold mr-2">»</span> Written as dotted decimal (e.g., 192.168.1.1).</li>
+                                <li class="flex items-start"><span class="text-teal-600 font-bold mr-2">»</span> Each octet translates to a decimal value from 0 to 255.</li>
+                            </ul>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-inner flex items-center justify-center">
+                            <div class="text-center">
+                                <div class="text-2xl font-mono font-bold text-slate-800 tracking-widest">11000000<span class="text-slate-400">.</span>10101000<span class="text-slate-400">.</span>00000001<span class="text-slate-400">.</span>00000001</div>
+                                <div class="text-xl font-bold text-teal-600 mt-2">192.168.1.1</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-6 border-2 border-teal-100 shadow-md">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Interactive Binary ↔ Decimal Converter</h3>
+                    <p class="text-sm text-slate-500 mb-6 font-medium italic">Key Takeaway: The 8-bit weights 128 64 32 16 8 4 2 1 are the most useful row of numbers in your career. Click the bits below to toggle them and see the decimal sum.</p>
+                    
+                    <div class="flex flex-col items-center">
+                        <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-6" id="binary-calculator">
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 bg-slate-50 py-4 px-8 rounded-full border border-slate-200">
+                            <span class="text-lg text-slate-600 font-semibold">Decimal Value:</span>
+                            <span class="text-4xl font-bold text-[#e28743]" id="decimal-result">0</span>
+                        </div>
+                        
+                        <div class="mt-6 text-sm text-slate-500 bg-teal-50 p-3 rounded text-center w-full max-w-md border border-teal-100" id="calculation-breakdown">
+                            Calculation: 0
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="module-2" class="hidden-section">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-slate-800 flex items-center">
+                        <span class="text-4xl mr-3 text-[#e28743]">◩</span> Subnetting, Masks & CIDR
+                    </h2>
+                    <p class="text-lg text-slate-600 mt-4 leading-relaxed">
+                        This module explores how we divide the 32-bit address space. Subnet masks separate the "network" neighborhood from the "host" house number. You will explore the evolution from rigid Classful networking to modern Classless Inter-Domain Routing (CIDR) and visualize how borrowing bits affects network capacity.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+                    <div class="bg-slate-800 text-white rounded-xl p-6 shadow-md">
+                        <h3 class="text-xl font-bold text-teal-400 mb-4">The Subnet Mask</h3>
+                        <p class="mb-4 text-slate-300">A 32-bit value that splits the address:</p>
+                        <ul class="space-y-2 text-sm text-slate-300 mb-6">
+                            <li><span class="bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded mr-2">1s</span> Network portion (Left side)</li>
+                            <li><span class="bg-slate-500/50 text-slate-300 px-2 py-0.5 rounded mr-2">0s</span> Host portion (Right side)</li>
+                        </ul>
+                        <div class="bg-slate-900 p-4 rounded font-mono text-center mb-4">
+                            255.255.255.0 = <span class="text-teal-400">/24</span>
+                        </div>
+                        <p class="text-sm italic text-slate-400 border-l-4 border-teal-400 pl-3">"The mask says where the neighbourhood ends and the house number begins. Get it wrong and packets walk into the wrong building."</p>
+                    </div>
+
+                    <div class="bg-[#faf8f5] border border-slate-200 rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">Classful vs. Classless (CIDR)</h3>
+                        <div class="space-y-4">
+                            <div class="border-b border-slate-200 pb-3">
+                                <h4 class="font-bold text-[#e28743]">Classful (Legacy)</h4>
+                                <p class="text-sm text-slate-600 mt-1">Mask determined strictly by the first octet. Resulted in massive wasted address blocks.</p>
+                                <div class="flex flex-wrap gap-2 mt-2 text-xs font-mono">
+                                    <span class="bg-white border border-slate-300 px-2 py-1 rounded">A: 1-126 (/8)</span>
+                                    <span class="bg-white border border-slate-300 px-2 py-1 rounded">B: 128-191 (/16)</span>
+                                    <span class="bg-white border border-slate-300 px-2 py-1 rounded">C: 192-223 (/24)</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-teal-600">CIDR & VLSM (Modern)</h4>
+                                <p class="text-sm text-slate-600 mt-1">Mask is whatever you define (e.g., /13, /27). Variable Length Subnet Masking allows fitting subnet size to exact host counts.</p>
+                                <p class="text-sm font-bold text-slate-700 mt-2">Classful = Pre-built suit. VLSM = Tailored suit.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl p-6 mb-8">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Usable Hosts per Subnet (CIDR /24 to /30)</h3>
+                    <p class="text-sm text-slate-500 mb-4">Notice the exponential drop. Each bit borrowed for the network halves the available hosts.</p>
+                    <div class="chart-container">
+                        <canvas id="hostsChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                    <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                        <h3 class="text-lg font-bold text-slate-800">The Subnetting Cheat Sheet</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-100 text-slate-600 font-medium">
+                                <tr>
+                                    <th class="px-6 py-3">CIDR</th>
+                                    <th class="px-6 py-3">Mask</th>
+                                    <th class="px-6 py-3">Block Size</th>
+                                    <th class="px-6 py-3">Usable Hosts</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 text-slate-700 font-mono">
+                                <tr class="hover:bg-slate-50"><td class="px-6 py-3 font-bold">/24</td><td class="px-6 py-3">255.255.255.0</td><td class="px-6 py-3">256</td><td class="px-6 py-3">254</td></tr>
+                                <tr class="hover:bg-slate-50"><td class="px-6 py-3 font-bold">/25</td><td class="px-6 py-3">255.255.255.128</td><td class="px-6 py-3">128</td><td class="px-6 py-3">126</td></tr>
+                                <tr class="hover:bg-slate-50"><td class="px-6 py-3 font-bold">/26</td><td class="px-6 py-3">255.255.255.192</td><td class="px-6 py-3">64</td><td class="px-6 py-3">62</td></tr>
+                                <tr class="hover:bg-slate-50"><td class="px-6 py-3 font-bold">/27</td><td class="px-6 py-3">255.255.255.224</td><td class="px-6 py-3">32</td><td class="px-6 py-3">30</td></tr>
+                                <tr class="hover:bg-slate-50"><td class="px-6 py-3 font-bold">/28</td><td class="px-6 py-3">255.255.255.240</td><td class="px-6 py-3">16</td><td class="px-6 py-3">14</td></tr>
+                                <tr class="hover:bg-slate-50"><td class="px-6 py-3 font-bold">/29</td><td class="px-6 py-3">255.255.255.248</td><td class="px-6 py-3">8</td><td class="px-6 py-3">6</td></tr>
+                                <tr class="hover:bg-slate-50 bg-red-50"><td class="px-6 py-3 font-bold text-red-600">/30</td><td class="px-6 py-3 text-red-600">255.255.255.252</td><td class="px-6 py-3 text-red-600">4</td><td class="px-6 py-3 font-bold text-red-600">2 (PtP Links)</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+
+            <section id="module-3" class="hidden-section">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-slate-800 flex items-center">
+                        <span class="text-4xl mr-3 text-[#e28743]">▣</span> Address Types & NAT
+                    </h2>
+                    <p class="text-lg text-slate-600 mt-4 leading-relaxed">
+                        Not all IP addresses behave the same way. This section outlines the critical differences between routable public addresses, reusable private ranges defined by RFC 1918, and how Network Address Translation (NAT/PAT) bridges the gap between them. It also covers the communication types: Unicast, Multicast, and Broadcast.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    <div class="bg-white border-t-4 border-teal-500 shadow-sm rounded-b-xl p-5 hover:shadow-md transition">
+                        <h4 class="text-lg font-bold text-slate-800 mb-2 flex justify-between">Unicast <span class="text-teal-500">↑↓</span></h4>
+                        <p class="text-sm text-slate-600 mb-3">One to one. Default for almost all traffic. Source IP to a single destination IP.</p>
+                        <p class="text-xs font-medium text-slate-500 italic">"Order one croqueta."</p>
+                    </div>
+                    <div class="bg-white border-t-4 border-purple-500 shadow-sm rounded-b-xl p-5 hover:shadow-md transition">
+                        <h4 class="text-lg font-bold text-slate-800 mb-2 flex justify-between">Multicast <span class="text-purple-500">⤑⇉</span></h4>
+                        <p class="text-sm text-slate-600 mb-3">One to a group. Class D (224.0.0.0/4). Senders send once, only subscribed receivers process it.</p>
+                        <p class="text-xs font-medium text-slate-500 italic">"Waiter shouts football score to one table."</p>
+                    </div>
+                    <div class="bg-white border-t-4 border-[#e28743] shadow-sm rounded-b-xl p-5 hover:shadow-md transition">
+                        <h4 class="text-lg font-bold text-slate-800 mb-2 flex justify-between">Broadcast <span class="text-[#e28743]">⤖⤖</span></h4>
+                        <p class="text-sm text-slate-600 mb-3">One to everybody. Subnet's last address. Flooded by switches, blocked by routers.</p>
+                        <p class="text-xs font-medium text-slate-500 italic">"Bar closes in 5 minutes."</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">RFC 1918 (Private Ranges)</h3>
+                        <p class="text-sm text-slate-600 mb-4">Reusable across organizations. Not routable on the public internet. Require NAT to talk outward.</p>
+                        
+                        <div class="space-y-3 font-mono text-sm">
+                            <div class="bg-white p-3 rounded border border-slate-200 flex justify-between items-center">
+                                <span class="font-bold text-slate-800">10.0.0.0<span class="text-teal-600">/8</span></span>
+                                <span class="text-slate-500 text-xs">Class A Scale (~16.7M)</span>
+                            </div>
+                            <div class="bg-white p-3 rounded border border-slate-200 flex justify-between items-center">
+                                <span class="font-bold text-slate-800">172.16.0.0<span class="text-teal-600">/12</span></span>
+                                <span class="text-slate-500 text-xs">Class B Scale (~1M)</span>
+                            </div>
+                            <div class="bg-white p-3 rounded border border-slate-200 flex justify-between items-center">
+                                <span class="font-bold text-slate-800">192.168.0.0<span class="text-teal-600">/16</span></span>
+                                <span class="text-slate-500 text-xs">Class C Scale (~65k)</span>
+                            </div>
+                        </div>
+                        
+                        <h4 class="text-sm font-bold text-slate-700 mt-6 mb-2">Other Special Ranges:</h4>
+                        <ul class="text-xs text-slate-600 space-y-1 font-mono">
+                            <li>127.0.0.0/8 — Loopback</li>
+                            <li>169.254.0.0/16 — APIPA (Link-local)</li>
+                            <li>100.64.0.0/10 — CGNAT (Carrier)</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-[#faf8f5] rounded-xl p-6 border border-slate-200">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">NAT & PAT</h3>
+                        <p class="text-sm text-slate-600 mb-4">The solution to IPv4 exhaustion. Translates private IPs to public IPs.</p>
+                        
+                        <div class="bg-white p-4 rounded shadow-sm mb-4 border-l-4 border-[#e28743]">
+                            <h4 class="font-bold text-slate-800">PAT (NAT-Overload)</h4>
+                            <p class="text-xs text-slate-600 mt-1">Many private IPs share ONE public IP, separated by <strong>port numbers</strong> (49152–65535).</p>
+                            <div class="mt-3 p-2 bg-slate-100 rounded text-xs font-mono text-center">
+                                (Priv_IP:Port) ↔ (Pub_IP:Port)
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-2 text-sm">
+                            <p><strong>Static NAT (1:1):</strong> One private ↔ one public, fixed.</p>
+                            <p><strong>Dynamic NAT:</strong> Pool of public IPs, first-come-first-served.</p>
+                        </div>
+                        <p class="text-xs font-medium text-slate-500 italic mt-4">"PAT is the Hotel Ritz switchboard: hundreds of rooms, one street number, an extension table."</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="module-4" class="hidden-section">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-slate-800 flex items-center">
+                        <span class="text-4xl mr-3 text-[#e28743]">⟳</span> DHCP & IPv6
+                    </h2>
+                    <p class="text-lg text-slate-600 mt-4 leading-relaxed">
+                        Modern networks rely on dynamic addressing to manage clients efficiently, and IPv6 is the mandatory future. This module lets you step through the DHCP DORA process interactively and breaks down the massive 128-bit structure of an IPv6 address.
+                    </p>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl p-6 mb-10 shadow-sm">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">The DHCP DORA Process</h3>
+                    <p class="text-sm text-slate-500 mb-6">Click on each step below to see how a client dynamically obtains an IP address.</p>
+                    
+                    <div class="flex flex-col md:flex-row gap-4 mb-6" id="dora-buttons">
+                        <button class="dora-step flex-1 py-4 px-2 rounded-lg bg-slate-100 border border-slate-300 font-bold text-xl text-slate-700 active" data-step="discover">
+                            D <span class="text-sm block font-normal text-slate-500 mt-1">Discover</span>
+                        </button>
+                        <button class="dora-step flex-1 py-4 px-2 rounded-lg bg-slate-100 border border-slate-300 font-bold text-xl text-slate-700" data-step="offer">
+                            O <span class="text-sm block font-normal text-slate-500 mt-1">Offer</span>
+                        </button>
+                        <button class="dora-step flex-1 py-4 px-2 rounded-lg bg-slate-100 border border-slate-300 font-bold text-xl text-slate-700" data-step="request">
+                            R <span class="text-sm block font-normal text-slate-500 mt-1">Request</span>
+                        </button>
+                        <button class="dora-step flex-1 py-4 px-2 rounded-lg bg-slate-100 border border-slate-300 font-bold text-xl text-slate-700" data-step="acknowledge">
+                            A <span class="text-sm block font-normal text-slate-500 mt-1">Acknowledge</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-100 rounded-lg p-6 min-h-[120px]" id="dora-content">
+                        <h4 class="font-bold text-blue-800 text-lg mb-2">Discover (Broadcast)</h4>
+                        <p class="text-blue-900">Client broadcasts "Are there any DHCP servers out there?" across the local subnet. Source: 0.0.0.0, Destination: 255.255.255.255.</p>
+                    </div>
+                    
+                    <div class="mt-6 pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="font-bold text-slate-700">Key Options:</span>
+                            <ul class="text-slate-600 list-disc ml-5 mt-1">
+                                <li>Opt 1: Subnet mask</li>
+                                <li>Opt 3: Default gateway</li>
+                                <li>Opt 6: DNS servers</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <span class="font-bold text-slate-700">Timers:</span>
+                            <ul class="text-slate-600 mt-1">
+                                <li><strong>T1 (50%):</strong> Renew (Unicast) - "Short DORA" (R+A)</li>
+                                <li><strong>T2 (87.5%):</strong> Rebind (Broadcast)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 text-white rounded-xl p-6 shadow-md">
+                    <h3 class="text-xl font-bold text-[#e28743] mb-4">IPv6 — The 128-bit Future</h3>
+                    <p class="text-slate-300 text-sm mb-6">Built to solve IPv4 exhaustion (IANA pool depleted Feb 3, 2011). Offers 2<sup>128</sup> addresses, SLAAC, and native multicast (no broadcasts).</p>
+
+                    <div class="bg-slate-900 p-4 rounded-lg font-mono text-center text-sm md:text-base overflow-x-auto mb-6">
+                        <div class="text-teal-400 mb-1">2001:db8:cafe:0001::a00:27ff:fe9b:1234</div>
+                        <div class="flex text-xs text-slate-400 mt-2 justify-center w-full min-w-[500px]">
+                            <div class="flex-1 border-t border-slate-600 pt-1">Routing Prefix (48)</div>
+                            <div class="w-16 border-t border-slate-600 pt-1 text-center">Subnet</div>
+                            <div class="flex-1 border-t border-slate-600 pt-1 text-right">Interface ID (64 bits)</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                        <div>
+                            <h4 class="font-bold text-slate-200 border-b border-slate-600 pb-1 mb-2">Address Scopes</h4>
+                            <ul class="space-y-1 text-slate-300 font-mono">
+                                <li><span class="text-teal-400">::1</span> — Loopback</li>
+                                <li><span class="text-teal-400">fe80::/10</span> — Link-local</li>
+                                <li><span class="text-teal-400">fc00::/7</span> — Unique-local (RFC 4193)</li>
+                                <li>Global — Everything else</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-200 border-b border-slate-600 pb-1 mb-2">Shortening Rules</h4>
+                            <ol class="list-decimal ml-4 space-y-1 text-slate-300">
+                                <li>Drop leading zeros in each group.</li>
+                                <li>Replace <strong>longest</strong> run of zero groups with <code>::</code> (only <strong>once</strong>).</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="module-5" class="hidden-section">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-slate-800 flex items-center">
+                        <span class="text-4xl mr-3 text-[#e28743]">⚒</span> Workshop & Lab Project
+                    </h2>
+                    <p class="text-lg text-slate-600 mt-4 leading-relaxed">
+                        Theory must be put into practice. This final module outlines the practical exercises required to complete Project Stage 4: Address the Network. Review the Magic Number method before starting the subnetting tasks.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-amber-900 mb-3">Magic-Number Method (5 Steps)</h3>
+                        <ol class="list-decimal ml-5 space-y-2 text-amber-800 text-sm">
+                            <li>Find the <strong>interesting octet</strong> (mask transitions from 255 to <255).</li>
+                            <li>Compute <strong>block size</strong> = 256 − value of that mask octet.</li>
+                            <li>Multiples of block size = <strong>subnet boundaries</strong>.</li>
+                            <li>Network = lower boundary; broadcast = next boundary − 1.</li>
+                            <li>First / last host = network + 1 / broadcast − 1.</li>
+                        </ol>
+                    </div>
+
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                        <h3 class="text-xl font-bold text-slate-800 mb-3">Quick Self-Check</h3>
+                        <ul class="space-y-3 text-sm text-slate-600">
+                            <li class="flex items-start"><span class="bg-slate-200 text-slate-700 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-3 shrink-0">1</span> Convert 192.168.50.0/27 to mask, broadcast, host range — without calculator.</li>
+                            <li class="flex items-start"><span class="bg-slate-200 text-slate-700 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-3 shrink-0">2</span> Memorise four DORA messages and which two are broadcast.</li>
+                            <li class="flex items-start"><span class="bg-slate-200 text-slate-700 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-3 shrink-0">3</span> Explain why your home router uses PAT.</li>
+                            <li class="flex items-start"><span class="bg-slate-200 text-slate-700 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-3 shrink-0">4</span> List three RFC 1918 ranges from memory.</li>
+                        </ul>
+                        <p class="text-xs text-red-500 italic mt-4">If any took >30 seconds, re-read the sections!</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 text-white rounded-xl p-6 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">⚙</div>
+                    <h3 class="text-xl font-bold text-teal-400 mb-4 border-b border-slate-600 pb-2">Project Stage 4: Address the Network</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm text-slate-300">
+                        <div>
+                            <h4 class="font-bold text-white mb-1">Step 1 & 2: IP Plan & GNS3</h4>
+                            <ul class="list-disc ml-5 space-y-1 mb-4">
+                                <li>Carve 10.42.0.0/22 for 6 VLANs (VLSM).</li>
+                                <li>Config <code class="bg-slate-700 px-1 rounded text-teal-300">ip dhcp pool</code> on staff VLAN.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-white mb-1">Step 3 & 4: Static & IPFire</h4>
+                            <ul class="list-disc ml-5 space-y-1 mb-4">
+                                <li>Static IPs for Server VLAN (Ubuntu netplan).</li>
+                                <li>IPFire 4 zones (Red, Green, Blue, Orange).</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-2">
+                            <h4 class="font-bold text-white mb-1">Step 5: pfSense</h4>
+                            <ul class="list-disc ml-5 space-y-1">
+                                <li>Add VLANs, configure DHCP Server per VLAN.</li>
+                                <li>Configure DHCP <strong>relay</strong> for one VLAN.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const sections = document.querySelectorAll('main section');
+
+        navButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                navButtons.forEach(b => b.classList.remove('active', 'bg-slate-50'));
+                btn.classList.add('active');
+                
+                sections.forEach(sec => sec.classList.add('hidden-section'));
+                document.getElementById(btn.dataset.target).classList.remove('hidden-section');
+                
+                if(btn.dataset.target === 'module-2') {
+                    initChart(); 
+                }
+            });
+        });
+
+        const bitWeights = [128, 64, 32, 16, 8, 4, 2, 1];
+        const calcContainer = document.getElementById('binary-calculator');
+        const decimalResult = document.getElementById('decimal-result');
+        const calcBreakdown = document.getElementById('calculation-breakdown');
+        let currentBits = [0, 0, 0, 0, 0, 0, 0, 0];
+
+        function updateCalculator() {
+            let sum = 0;
+            let equation = [];
+            currentBits.forEach((bit, index) => {
+                if (bit === 1) {
+                    sum += bitWeights[index];
+                    equation.push(bitWeights[index]);
+                }
+            });
+            
+            decimalResult.textContent = sum;
+            if (equation.length === 0) {
+                calcBreakdown.textContent = "Calculation: 0";
+            } else {
+                calcBreakdown.textContent = "Calculation: " + equation.join(" + ") + " = " + sum;
+            }
+        }
+
+        bitWeights.forEach((weight, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'bit-btn w-12 h-14 md:w-16 md:h-16 rounded-lg border border-slate-300 bg-white font-mono text-xl font-bold text-slate-400 flex flex-col items-center justify-center';
+            btn.innerHTML = `<span class="text-xs font-normal mb-1 opacity-70">${weight}</span>0`;
+            
+            btn.addEventListener('click', () => {
+                if (currentBits[index] === 0) {
+                    currentBits[index] = 1;
+                    btn.classList.add('active');
+                    btn.innerHTML = `<span class="text-xs font-normal mb-1 opacity-90">${weight}</span>1`;
+                } else {
+                    currentBits[index] = 0;
+                    btn.classList.remove('active');
+                    btn.innerHTML = `<span class="text-xs font-normal mb-1 opacity-70">${weight}</span>0`;
+                }
+                updateCalculator();
+            });
+            calcContainer.appendChild(btn);
+        });
+
+        let chartInstance = null;
+        function initChart() {
+            if (chartInstance) return; 
+            
+            const ctx = document.getElementById('hostsChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['/24', '/25', '/26', '/27', '/28', '/29', '/30'],
+                    datasets: [{
+                        label: 'Usable Hosts',
+                        data: [254, 126, 62, 30, 14, 6, 2],
+                        backgroundColor: '#319795',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#e2e8f0' },
+                            ticks: { color: '#4a5568' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#4a5568', font: { family: 'monospace' } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#2d3748',
+                            titleFont: { family: 'monospace' },
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y + ' Usable Hosts';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        const doraData = {
+            'discover': { title: 'Discover (Broadcast)', text: 'Client broadcasts "Are there any DHCP servers out there?" across the local subnet. Source: 0.0.0.0, Destination: 255.255.255.255.', color: 'blue' },
+            'offer': { title: 'Offer (Unicast/Broadcast)', text: 'Server(s) reply with a candidate IP address and configuration options (Mask, Gateway, DNS).', color: 'teal' },
+            'request': { title: 'Request (Broadcast)', text: 'Client picks one offer and broadcasts the choice so other servers know their offers were rejected.', color: 'amber' },
+            'acknowledge': { title: 'Acknowledge (Unicast/Broadcast)', text: 'Chosen server commits the lease to its database and confirms to the client. The client can now use the IP.', color: 'green' }
+        };
+
+        const doraButtons = document.querySelectorAll('.dora-step');
+        const doraContent = document.getElementById('dora-content');
+
+        doraButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                doraButtons.forEach(b => {
+                    b.classList.remove('bg-blue-600', 'text-white', 'bg-teal-600', 'bg-amber-600', 'bg-green-600');
+                    b.classList.add('bg-slate-100', 'text-slate-700');
+                });
+                
+                const step = btn.dataset.step;
+                const data = doraData[step];
+                
+                btn.classList.remove('bg-slate-100', 'text-slate-700');
+                if(step === 'discover') btn.classList.add('bg-blue-600', 'text-white');
+                if(step === 'offer') btn.classList.add('bg-teal-600', 'text-white');
+                if(step === 'request') btn.classList.add('bg-amber-600', 'text-white');
+                if(step === 'acknowledge') btn.classList.add('bg-green-600', 'text-white');
+
+                let bgClass = `bg-${data.color}-50`;
+                let borderClass = `border-${data.color}-100`;
+                let textTitleClass = `text-${data.color}-800`;
+                let textBodyClass = `text-${data.color}-900`;
+
+                if(data.color === 'teal') { bgClass = 'bg-teal-50'; borderClass = 'border-teal-100'; textTitleClass = 'text-teal-800'; textBodyClass = 'text-teal-900'; }
+                if(data.color === 'amber') { bgClass = 'bg-amber-50'; borderClass = 'border-amber-100'; textTitleClass = 'text-amber-800'; textBodyClass = 'text-amber-900'; }
+                if(data.color === 'green') { bgClass = 'bg-green-50'; borderClass = 'border-green-100'; textTitleClass = 'text-green-800'; textBodyClass = 'text-green-900'; }
+                if(data.color === 'blue') { bgClass = 'bg-blue-50'; borderClass = 'border-blue-100'; textTitleClass = 'text-blue-800'; textBodyClass = 'text-blue-900'; }
+
+                doraContent.className = `${bgClass} border ${borderClass} rounded-lg p-6 min-h-[120px] transition-colors duration-300`;
+                doraContent.innerHTML = `
+                    <h4 class="font-bold ${textTitleClass} text-lg mb-2">${data.title}</h4>
+                    <p class="${textBodyClass}">${data.text}</p>
+                `;
+            });
+        });
+
+    </script>
+</body>
+</html>
+
+

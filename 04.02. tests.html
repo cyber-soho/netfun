@@ -1,0 +1,332 @@
+<div class="enhanceable_content tabs">
+  <ul>
+    <li><a href="#tab-flashcards">Flashcards</a></li>
+    <li><a href="#tab-quiz">Practice Quiz</a></li>
+  </ul>
+
+  <div id="tab-flashcards">
+    <h2>IPv4, Subnetting, and IPv6 Flashcards</h2>
+    <p><em>Click on any term or question below to reveal the answer.</em></p>
+    
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">Total number of bits in an IPv4 address</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">32 bits, split into 4 octets.</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">The 8-bit binary weights for IPv4 conversion</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">128, 64, 32, 16, 8, 4, 2, 1.</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">Primary function of a subnet mask</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">To split an IP address into its network and host portions.</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">First address in any subnet</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">The network identifier (cannot be assigned to a host).</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">Last address in any subnet</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">The broadcast address (cannot be assigned to a host).</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">Formula for calculating usable hosts in a subnet</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">Total addresses minus 2 (subtracting the network and broadcast addresses).</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">Number of usable hosts in a /24 subnet</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">254 usable hosts.</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">Number of usable hosts in a /30 subnet</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">2 usable hosts.</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">Default mask for a Class A network</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">/8</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">Default mask for a Class B network</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">/16</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">Default mask for a Class C network</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">/24</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">Purpose of the IPv4 Class D range (224.0.0.0/4)</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">Multicast routing (sending from one to a subscribed group).</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">IPv4 Loopback address block</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">127.0.0.0/8 (typically 127.0.0.1).</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">CIDR (Classless Inter-Domain Routing)</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">A routing method that drops rigid class boundaries, allowing subnet masks of any length (0-32).</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">VLSM (Variable Length Subnet Masking)</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">A technique allowing different subnets within the same network to have different mask sizes, eliminating address waste.</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">RFC 1918 Class A private range</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">10.0.0.0/8</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">RFC 1918 Class B private range</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">172.16.0.0/12</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">RFC 1918 Class C private range</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">192.168.0.0/16</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">APIPA / link-local IPv4 range</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">169.254.0.0/16 (assigned when DHCP fails).</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">Supernetting / Route summarization</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">The process of merging contiguous smaller network blocks into a single larger block to reduce routing table size.</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">DHCP DORA process steps</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">Discover, Offer, Request, Acknowledge.</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">DHCP T1 Timer</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">Triggered at 50% of the lease duration; the client attempts to renew the lease via unicast.</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">PAT (NAT-overload)</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">A form of translation mapping many private IP addresses to a single public IP address, using unique port numbers to separate sessions.</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">Total size of an IPv6 address</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">128 bits, providing 2<sup>128</sup> total addresses.</p>
+      </details>
+
+      <details style="border: 1px solid #ccc; padding: 12px; border-radius: 6px; background-color: #fcfcfc;">
+        <summary style="font-weight: bold; cursor: pointer; outline: none; font-size: 1.1em;">IPv6 Link-local prefix</summary>
+        <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ccc; color: #333;">fe80::/10 (auto-configured per interface).</p>
+      </details>
+
+    </div>
+  </div>
+
+  <div id="tab-quiz">
+    <h2>Networking Essentials Quiz</h2>
+    <p><em>Review the question and select your answer. Click the "Show Answer & Rationale" button to check your work.</em></p>
+    
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      
+      <div style="background-color: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #e0e0e0;">
+        <p style="font-weight: bold; font-size: 1.1em; margin-bottom: 10px;">1. If an octet is 11000000 in binary, what is its decimal value?</p>
+        <ul style="list-style-type: none; padding-left: 0;">
+          <li style="margin-bottom: 5px;">&#9711; A) 192</li>
+          <li style="margin-bottom: 5px;">&#9711; B) 128</li>
+          <li style="margin-bottom: 5px;">&#9711; C) 224</li>
+          <li style="margin-bottom: 5px;">&#9711; D) 168</li>
+        </ul>
+        <details style="margin-top: 15px;">
+          <summary style="background-color: #0055a5; color: white; padding: 8px 12px; border-radius: 4px; cursor: pointer; display: inline-block; outline: none;">Show Answer & Rationale</summary>
+          <div style="margin-top: 10px; padding: 10px; border-left: 4px solid #4CAF50; background-color: #e8f5e9;">
+            <p><strong>Correct Answer:</strong> A) 192</p>
+            <p><strong>Rationale:</strong> The leftmost two bits correspond to the weights 128 and 64, which sum together to reach this value.</p>
+            <p><em>Hint: Think about the specific decimal weights of the first two positions from the left in an 8-bit sequence.</em></p>
+          </div>
+        </details>
+      </div>
+
+      <div style="background-color: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #e0e0e0;">
+        <p style="font-weight: bold; font-size: 1.1em; margin-bottom: 10px;">2. How many usable hosts are available in a subnet with a /29 CIDR mask?</p>
+        <ul style="list-style-type: none; padding-left: 0;">
+          <li style="margin-bottom: 5px;">&#9711; A) 6</li>
+          <li style="margin-bottom: 5px;">&#9711; B) 8</li>
+          <li style="margin-bottom: 5px;">&#9711; C) 14</li>
+          <li style="margin-bottom: 5px;">&#9711; D) 2</li>
+        </ul>
+        <details style="margin-top: 15px;">
+          <summary style="background-color: #0055a5; color: white; padding: 8px 12px; border-radius: 4px; cursor: pointer; display: inline-block; outline: none;">Show Answer & Rationale</summary>
+          <div style="margin-top: 10px; padding: 10px; border-left: 4px solid #4CAF50; background-color: #e8f5e9;">
+            <p><strong>Correct Answer:</strong> A) 6</p>
+            <p><strong>Rationale:</strong> A /29 mask provides a total block size of 8, and subtracting the network and broadcast addresses yields the usable count.</p>
+            <p><em>Hint: Remember to subtract the network identifier and the broadcast address from the total block size.</em></p>
+          </div>
+        </details>
+      </div>
+
+      <div style="background-color: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #e0e0e0;">
+        <p style="font-weight: bold; font-size: 1.1em; margin-bottom: 10px;">3. Which of the following IP addresses is strictly reserved for loopback testing and cannot be assigned to a standard physical network interface?</p>
+        <ul style="list-style-type: none; padding-left: 0;">
+          <li style="margin-bottom: 5px;">&#9711; A) 127.0.0.1</li>
+          <li style="margin-bottom: 5px;">&#9711; B) 10.0.0.1</li>
+          <li style="margin-bottom: 5px;">&#9711; C) 169.254.1.1</li>
+          <li style="margin-bottom: 5px;">&#9711; D) 224.0.0.1</li>
+        </ul>
+        <details style="margin-top: 15px;">
+          <summary style="background-color: #0055a5; color: white; padding: 8px 12px; border-radius: 4px; cursor: pointer; display: inline-block; outline: none;">Show Answer & Rationale</summary>
+          <div style="margin-top: 10px; padding: 10px; border-left: 4px solid #4CAF50; background-color: #e8f5e9;">
+            <p><strong>Correct Answer:</strong> A) 127.0.0.1</p>
+            <p><strong>Rationale:</strong> The entire /8 block starting with 127 is reserved for this internal testing purpose and never routes traffic to the physical network.</p>
+            <p><em>Hint: This specific first-octet value is referenced heavily in operating system network diagnostics to refer to the local machine itself.</em></p>
+          </div>
+        </details>
+      </div>
+
+      <div style="background-color: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #e0e0e0;">
+        <p style="font-weight: bold; font-size: 1.1em; margin-bottom: 10px;">4. Which IP address falls within the RFC 1918 private range equivalent to a Class B network scale?</p>
+        <ul style="list-style-type: none; padding-left: 0;">
+          <li style="margin-bottom: 5px;">&#9711; A) 172.16.5.10</li>
+          <li style="margin-bottom: 5px;">&#9711; B) 10.15.0.5</li>
+          <li style="margin-bottom: 5px;">&#9711; C) 192.168.1.1</li>
+          <li style="margin-bottom: 5px;">&#9711; D) 169.254.0.5</li>
+        </ul>
+        <details style="margin-top: 15px;">
+          <summary style="background-color: #0055a5; color: white; padding: 8px 12px; border-radius: 4px; cursor: pointer; display: inline-block; outline: none;">Show Answer & Rationale</summary>
+          <div style="margin-top: 10px; padding: 10px; border-left: 4px solid #4CAF50; background-color: #e8f5e9;">
+            <p><strong>Correct Answer:</strong> A) 172.16.5.10</p>
+            <p><strong>Rationale:</strong> The 172.16.0.0/12 block is designated as the private range for mid-sized networks, scaling up to roughly one million addresses.</p>
+            <p><em>Hint: Recall the three main RFC 1918 blocks and associate them with their historical class letters A, B, and C based on their size.</em></p>
+          </div>
+        </details>
+      </div>
+
+      <div style="background-color: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #e0e0e0;">
+        <p style="font-weight: bold; font-size: 1.1em; margin-bottom: 10px;">5. A routing protocol sends an update to the 224.0.0.5 address. What type of traffic is this?</p>
+        <ul style="list-style-type: none; padding-left: 0;">
+          <li style="margin-bottom: 5px;">&#9711; A) Multicast</li>
+          <li style="margin-bottom: 5px;">&#9711; B) Unicast</li>
+          <li style="margin-bottom: 5px;">&#9711; C) Broadcast</li>
+          <li style="margin-bottom: 5px;">&#9711; D) Anycast</li>
+        </ul>
+        <details style="margin-top: 15px;">
+          <summary style="background-color: #0055a5; color: white; padding: 8px 12px; border-radius: 4px; cursor: pointer; display: inline-block; outline: none;">Show Answer & Rationale</summary>
+          <div style="margin-top: 10px; padding: 10px; border-left: 4px solid #4CAF50; background-color: #e8f5e9;">
+            <p><strong>Correct Answer:</strong> A) Multicast</p>
+            <p><strong>Rationale:</strong> The 224.0.0.0/4 range, historically known as Class D, is designed specifically for one-to-many communication to subscribed receivers.</p>
+            <p><em>Hint: Consider the purpose of the 224.0.0.0/4 block, which allows a single sender to efficiently reach a specific subscribed group rather than everyone.</em></p>
+          </div>
+        </details>
+      </div>
+
+      <div style="background-color: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #e0e0e0;">
+        <p style="font-weight: bold; font-size: 1.1em; margin-bottom: 10px;">6. During the DHCP DORA process, which message does the client broadcast to let all listening servers know which specific IP lease it has chosen?</p>
+        <ul style="list-style-type: none; padding-left: 0;">
+          <li style="margin-bottom: 5px;">&#9711; A) Request</li>
+          <li style="margin-bottom: 5px;">&#9711; B) Discover</li>
+          <li style="margin-bottom: 5px;">&#9711; C) Offer</li>
+          <li style="margin-bottom: 5px;">&#9711; D) Acknowledge</li>
+        </ul>
+        <details style="margin-top: 15px;">
+          <summary style="background-color: #0055a5; color: white; padding: 8px 12px; border-radius: 4px; cursor: pointer; display: inline-block; outline: none;">Show Answer & Rationale</summary>
+          <div style="margin-top: 10px; padding: 10px; border-left: 4px solid #4CAF50; background-color: #e8f5e9;">
+            <p><strong>Correct Answer:</strong> A) Request</p>
+            <p><strong>Rationale:</strong> The client broadcasts its selection so the chosen server can commit the lease and unselected servers can return their offered IPs to the pool.</p>
+            <p><em>Hint: At this stage, the client has already received potential IP addresses from servers and must officially claim one.</em></p>
+          </div>
+        </details>
+      </div>
+
+      <div style="background-color: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #e0e0e0;">
+        <p style="font-weight: bold; font-size: 1.1em; margin-bottom: 10px;">7. How does Port Address Translation (PAT) allow multiple private IP addresses to share a single public IP address?</p>
+        <ul style="list-style-type: none; padding-left: 0;">
+          <li style="margin-bottom: 5px;">&#9711; A) By assigning unique ephemeral port numbers to each private session</li>
+          <li style="margin-bottom: 5px;">&#9711; B) By translating MAC addresses directly to public IP addresses</li>
+          <li style="margin-bottom: 5px;">&#9711; C) By encapsulating the private IPv4 packet inside an IPv6 header</li>
+          <li style="margin-bottom: 5px;">&#9711; D) By dynamically rotating through a large pool of public IP addresses</li>
+        </ul>
+        <details style="margin-top: 15px;">
+          <summary style="background-color: #0055a5; color: white; padding: 8px 12px; border-radius: 4px; cursor: pointer; display: inline-block; outline: none;">Show Answer & Rationale</summary>
+          <div style="margin-top: 10px; padding: 10px; border-left: 4px solid #4CAF50; background-color: #e8f5e9;">
+            <p><strong>Correct Answer:</strong> A) By assigning unique ephemeral port numbers to each private session</p>
+            <p><strong>Rationale:</strong> The router rewrites the source IP and source port, keeping track of the return path using the port number to route traffic back to the correct internal host.</p>
+            <p><em>Hint: Think about the 'Hotel Ritz switchboard' analogy and how an extension number helps route a call.</em></p>
+          </div>
+        </details>
+      </div>
+
+      <div style="background-color: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #e0e0e0;">
+        <p style="font-weight: bold; font-size: 1.1em; margin-bottom: 10px;">8. Applying the RFC 5952 shortening rules, how should the IPv6 address 2001:0db8:0000:0000:0000:0000:0000:0001 be represented?</p>
+        <ul style="list-style-type: none; padding-left: 0;">
+          <li style="margin-bottom: 5px;">&#9711; A) 2001:db8::1</li>
+          <li style="margin-bottom: 5px;">&#9711; B) 2001:0db8::1</li>
+          <li style="margin-bottom: 5px;">&#9711; C) 2001:db8::0001</li>
+          <li style="margin-bottom: 5px;">&#9711; D) 2001:db8::0::1</li>
+        </ul>
+        <details style="margin-top: 15px;">
+          <summary style="background-color: #0055a5; color: white; padding: 8px 12px; border-radius: 4px; cursor: pointer; display: inline-block; outline: none;">Show Answer & Rationale</summary>
+          <div style="margin-top: 10px; padding: 10px; border-left: 4px solid #4CAF50; background-color: #e8f5e9;">
+            <p><strong>Correct Answer:</strong> A) 2001:db8::1</p>
+            <p><strong>Rationale:</strong> Leading zeros are dropped from the groups, and the continuous block of zeros in the middle is replaced by a single double colon.</p>
+            <p><em>Hint: Apply both the rule for omitting leading zeros in a group and the rule for replacing the longest sequence of all-zero groups.</em></p>
+          </div>
+        </details>
+      </div>
+
+      <div style="background-color: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #e0e0e0;">
+        <p style="font-weight: bold; font-size: 1.1em; margin-bottom: 10px;">9. At what point during a DHCP lease does the client typically attempt a 'Short DORA' renewal via unicast to the original server?</p>
+        <ul style="list-style-type: none; padding-left: 0;">
+          <li style="margin-bottom: 5px;">&#9711; A) At the T1 timer, representing 50% of the lease duration</li>
+          <li style="margin-bottom: 5px;">&#9711; B) At the T2 timer, representing 87.5% of the lease duration</li>
+          <li style="margin-bottom: 5px;">&#9711; C) Immediately after the lease fully expires</li>
+          <li style="margin-bottom: 5px;">&#9711; D) When the client is rebooted manually</li>
+        </ul>
+        <details style="margin-top: 15px;">
+          <summary style="background-color: #0055a5; color: white; padding: 8px 12px; border-radius: 4px; cursor: pointer; display: inline-block; outline: none;">Show Answer & Rationale</summary>
+          <div style="margin-top: 10px; padding: 10px; border-left: 4px solid #4CAF50; background-color: #e8f5e9;">
+            <p><strong>Correct Answer:</strong> A) At the T1 timer, representing 50% of the lease duration</p>
+            <p><strong>Rationale:</strong> The client attempts a targeted renewal directly with the server that originally granted the address to extend its time without causing broadcast noise.</p>
+            <p><em>Hint: This occurs relatively early in the lease lifecycle to ensure connectivity is maintained without waiting for an emergency state.</em></p>
+          </div>
+        </details>
+      </div>
+
+      <div style="background-color: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #e0e0e0;">
+        <p style="font-weight: bold; font-size: 1.1em; margin-bottom: 10px;">10. What is the primary purpose of Supernetting (route summarization)?</p>
+        <ul style="list-style-type: none; padding-left: 0;">
+          <li style="margin-bottom: 5px;">&#9711; A) To merge contiguous smaller network blocks into a single summary route</li>
+          <li style="margin-bottom: 5px;">&#9711; B) To divide a large IP block into smaller segments for security boundaries</li>
+          <li style="margin-bottom: 5px;">&#9711; C) To allow multiple private IP addresses to share a single public IP address</li>
+          <li style="margin-bottom: 5px;">&#9711; D) To dynamically assign IP configurations to host devices on the network</li>
+        </ul>
+        <details style="margin-top: 15px;">
+          <summary style="background-color: #0055a5; color: white; padding: 8px 12px; border-radius: 4px; cursor: pointer; display: inline-block; outline: none;">Show Answer & Rationale</summary>
+          <div style="margin-top: 10px; padding: 10px; border-left: 4px solid #4CAF50; background-color: #e8f5e9;">
+            <p><strong>Correct Answer:</strong> A) To merge contiguous smaller network blocks into a single summary route</p>
+            <p><strong>Rationale:</strong> This aggregation reduces the overall size of routing tables, resulting in faster lookups and fewer routing updates across the network.</p>
+            <p><em>Hint: Think about how large organizations simplify the routing information they advertise to the rest of the world to increase efficiency.</em></p>
+          </div>
+        </details>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+
