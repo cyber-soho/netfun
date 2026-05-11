@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Services & Wi-Fi Study Guide</title>
+    <style>
+        :root {
+            --primary-color: #0056b3;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+        }
+
+        /* Tabs CSS */
+        .tab {
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+            background-color: #e1e8ed;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .tab button {
+            background-color: inherit;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 24px;
+            transition: 0.3s;
+            font-size: 18px;
+            font-weight: bold;
+            flex: 1;
+            color: #555;
+        }
+
+        .tab button:hover {
+            background-color: #d0d7dc;
+        }
+
+        .tab button.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .tabcontent {
+            display: none;
+            padding: 30px;
+            background-color: white;
+            border-top: none;
+            max-width: 940px;
+            margin: 0 auto;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Flashcards CSS */
+        .flashcard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .flashcard {
+            background-color: transparent;
+            width: 100%;
+            height: 200px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: var(--border-radius);
+        }
+
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: var(--border-radius);
+            border: 2px solid #e1e8ed;
+        }
+
+        .flashcard-front {
+            background-color: #fafbfc;
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .flashcard-back {
+            background-color: var(--primary-color);
+            color: white;
+            transform: rotateY(180deg);
+            font-size: 0.95em;
+        }
+
+        /* Quiz CSS */
+        .question-container {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .question-text {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .options-list li {
+            margin-bottom: 10px;
+        }
+
+        .options-list label {
+            cursor: pointer;
+            display: flex;
+            align-items: baseline;
+        }
+
+        .options-list input {
+            margin-right: 10px;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+            font-size: 0.95em;
+        }
+
+        .feedback.correct {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .feedback.incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .submit-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            display: block;
+            margin: 20px auto;
+        }
+
+        .submit-btn:hover {
+            background-color: #004494;
+        }
+        
+        .hint-btn {
+            background: none;
+            border: none;
+            color: #17a2b8;
+            cursor: pointer;
+            font-size: 0.9em;
+            text-decoration: underline;
+            padding: 0;
+            margin-top: 5px;
+        }
+        .hint-text {
+            display: none;
+            font-style: italic;
+            color: #555;
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Application Services & Wi-Fi Study Guide</h1>
+
+    <div class="tab">
+        <button class="tablinks" onclick="openTab(event, 'FlashcardsTab')" id="defaultOpen">Flashcards (25)</button>
+        <button class="tablinks" onclick="openTab(event, 'QuizTab')">Practice Quiz (10)</button>
+    </div>
+
+    <div id="FlashcardsTab" class="tabcontent">
+        <p style="text-align: center; color: #666; margin-bottom: 20px;">Click on a card to flip it and reveal the answer.</p>
+        <div class="flashcard-grid" id="flashcard-container">
+            </div>
+    </div>
+
+    <div id="QuizTab" class="tabcontent">
+        <p style="text-align: center; color: #666; margin-bottom: 20px;">Select the best answer for each question, then click Submit to check your work.</p>
+        <div id="quiz-container">
+            </div>
+        <button class="submit-btn" onclick="gradeQuiz()">Submit Quiz</button>
+    </div>
+
+    <script>
+        // Data Configuration
+        const flashcardsData = [
+            { front: "Transmission Control Protocol (TCP)", back: "A reliable, ordered, and connection-oriented Transport Layer protocol that establishes a connection using a three-way handshake." },
+            { front: "User Datagram Protocol (UDP)", back: "A connectionless, best-effort Transport Layer protocol with low overhead and lower latency, offering no retransmissions for lost packets." },
+            { front: "Network Socket", back: "The unique combination of a source IP address, source port, destination IP address, and destination port." },
+            { front: "Well-Known Ports Range", back: "Ports 0 to 1023, which are reserved for standard server-side services and require administrative privileges to bind." },
+            { front: "Ports 20 and 21", back: "File Transfer Protocol (FTP) used for data transfer (20) and control (21)." },
+            { front: "Port 22", back: "Secure Shell (SSH), the industry standard protocol used for secure remote terminal access." },
+            { front: "Port 53", back: "Domain Name System (DNS), used for name resolution translating human-readable domains into IP addresses." },
+            { front: "Ports 67 and 68", back: "Dynamic Host Configuration Protocol (DHCP), used by the server (67) and client (68) to automatically assign IP addresses." },
+            { front: "Ports 80 and 443", back: "HTTP for plaintext web traffic (80) and HTTPS for encrypted web traffic over TLS (443)." },
+            { front: "Virtual LAN (VLAN)", back: "An IEEE 802.1Q standard that allows one physical switch to behave like multiple logical switches to improve network performance, security, and manageability." },
+            { front: "Access Port vs. Trunk Port", back: "An access port carries traffic for a single VLAN directly to a host, while a trunk port carries traffic for multiple tagged VLANs between networking equipment." },
+            { front: "Address Resolution Protocol (ARP)", back: "A protocol that maps a Layer-3 IPv4 address to a Layer-2 MAC address on the same local broadcast domain." },
+            { front: "DNS A vs. AAAA Records", back: "An 'A' record maps a domain name to an IPv4 address, whereas an 'AAAA' record maps it to an IPv6 address." },
+            { front: "POP3 vs. IMAP", back: "POP3 downloads mail to a single device and deletes it from the server, while IMAP keeps mail on the server and syncs it across multiple devices." },
+            { front: "Components of a Home Integrated Router", back: "A Layer-3 router with NAT, a Layer-2 switch, a Wireless Access Point, and a stateful firewall." },
+            { front: "CSMA/CA", back: "Carrier Sense Multiple Access with Collision Avoidance; the protocol Wi-Fi uses to prevent devices from transmitting data at the exact same time." },
+            { front: "2.4 GHz vs. 5 GHz Wi-Fi Bands", back: "2.4 GHz offers longer range but slower speeds and more interference. 5 GHz offers faster speeds and cleaner channels but a shorter range." },
+            { front: "Non-overlapping 2.4 GHz Channels", back: "Channels 1, 6, and 11." },
+            { front: "Wi-Fi 4, 5, and 6 IEEE Standards", back: "802.11n (Wi-Fi 4), 802.11ac (Wi-Fi 5), and 802.11ax (Wi-Fi 6)." },
+            { front: "SSID vs. BSSID", back: "The SSID is the human-readable Wi-Fi network name, while the BSSID is the unique MAC address of the Access Point radio." },
+            { front: "WPA3", back: "The current best practice for Wi-Fi security, introduced in 2018 to replace the older WPA2 standard." },
+            { front: "Simultaneous Authentication of Equals (SAE)", back: "The WPA3 feature that replaces the older 4-way handshake, effectively eliminating offline dictionary attacks." },
+            { front: "Protected Management Frames (PMF)", back: "A security feature enforced in WPA3 that protects against network deauthentication and disassociation attacks." },
+            { front: "Port 25", back: "Simple Mail Transfer Protocol (SMTP), used for submitting and relaying email messages." },
+            { front: "DoH and DoT", back: "DNS-over-HTTPS and DNS-over-TLS; modern protocols used to encrypt DNS queries to improve user privacy." }
+        ];
+
+        const quizData = [
+            {
+                q: "A developer is building a live video conferencing application where occasional frame drops are acceptable, but latency must be kept to an absolute minimum. Which transport layer protocol should be utilized?",
+                options: [
+                    { text: "UDP", rationale: "This protocol prioritizes speed and low overhead by omitting handshakes and retransmissions, making it ideal for live streams.", isCorrect: true },
+                    { text: "TCP", rationale: "Guaranteed delivery requires retransmitting lost packets, which introduces delays unsuitable for real-time video.", isCorrect: false },
+                    { text: "HTTP", rationale: "This is an application layer protocol, not a transport layer protocol.", isCorrect: false },
+                    { text: "FTP", rationale: "This protocol is used for reliable file transfers and requires connection-oriented transport.", isCorrect: false }
+                ],
+                hint: "Consider whether waiting for lost data to be retransmitted would help or hinder a real-time conversation."
+            },
+            {
+                q: "A security analyst reviewing firewall logs notices a large amount of traffic attempting to connect to destination port 23 from outside the network. What legacy service is being targeted?",
+                options: [
+                    { text: "Telnet", rationale: "This legacy protocol operates on port 23 and provides remote shell access, but transmits all data in plaintext.", isCorrect: true },
+                    { text: "SSH", rationale: "Secure remote shell access operates on port 22.", isCorrect: false },
+                    { text: "FTP", rationale: "File transfers utilize ports 20 and 21.", isCorrect: false },
+                    { text: "SMTP", rationale: "Email submission utilizes port 25 or 587.", isCorrect: false }
+                ],
+                hint: "This protocol allows remote command-line access but transmits all data in plaintext without encryption."
+            },
+            {
+                q: "A network engineer needs to connect two physical switches together so that traffic from the STAFF, VOICE, and GUEST VLANs can flow between them. How should the switch ports connecting these devices be configured?",
+                options: [
+                    { text: "As trunk ports", rationale: "These ports are specifically designed to carry traffic for multiple VLANs simultaneously by preserving the 802.1Q tags.", isCorrect: true },
+                    { text: "As access ports", rationale: "These ports strip VLAN tags and assign all incoming traffic to a single, specific VLAN.", isCorrect: false },
+                    { text: "As router-on-a-stick links", rationale: "This refers to a routing topology, not the physical Layer-2 switch port configuration.", isCorrect: false },
+                    { text: "As management ports", rationale: "A management interface is meant for switch administration, not production traffic streams.", isCorrect: false }
+                ],
+                hint: "The ports must maintain the VLAN tags as frames move across the connection so the receiving switch knows where they belong."
+            },
+            {
+                q: "A malicious actor on a local network broadcasts a message falsely claiming that their MAC address is associated with the default gateway's IP address. Which protocol's lack of authentication allows this Man-in-the-Middle attack to succeed?",
+                options: [
+                    { text: "ARP", rationale: "Requests and replies within this protocol are inherently unauthenticated, allowing devices to easily spoof address bindings.", isCorrect: true },
+                    { text: "DHCP", rationale: "This protocol automatically assigns IP addresses, rather than mapping existing ones to hardware addresses.", isCorrect: false },
+                    { text: "DNS", rationale: "This service translates domain names into IP addresses.", isCorrect: false },
+                    { text: "TCP", rationale: "This provides reliable end-to-end data delivery at the transport layer.", isCorrect: false }
+                ],
+                hint: "This protocol is responsible for mapping known Layer 3 IPv4 addresses to unknown Layer 2 physical addresses on a local segment."
+            },
+            {
+                q: "An employee needs to access their company email from a laptop, a smartphone, and a tablet, expecting read status and folder structures to remain synchronized across all three. Which protocol should the email client use for retrieval?",
+                options: [
+                    { text: "IMAP", rationale: "This protocol keeps messages stored on the server, allowing multiple devices to view and synchronize the same mailbox state.", isCorrect: true },
+                    { text: "POP3", rationale: "This protocol is designed to download messages to a single device and immediately delete them from the server.", isCorrect: false },
+                    { text: "SMTP", rationale: "This handles the outbound sending and relaying of messages.", isCorrect: false },
+                    { text: "FTP", rationale: "This protocol is dedicated to general file transfers.", isCorrect: false }
+                ],
+                hint: "The chosen method must retain the messages on the central server rather than pulling them off locally."
+            },
+            {
+                q: "Because a Wi-Fi radio cannot simultaneously transmit and listen to detect collisions, how does an 802.11 client ensure the channel is clear before sending a frame?",
+                options: [
+                    { text: "It listens for activity, waits a random back-off time if busy, transmits, and awaits an ACK.", rationale: "The CSMA/CA process requires devices to sense the medium, delay transmission if occupied, and rely on acknowledgments.", isCorrect: true },
+                    { text: "It transmits immediately and listens for a collision signal from the Access Point.", rationale: "Wireless radios lack the hardware capability to transmit data and simultaneously listen for a collision signal.", isCorrect: false },
+                    { text: "It requests a dedicated timeslot from the Access Point and waits for authorization.", rationale: "Traditional Wi-Fi networks utilize decentralized contention for the shared medium.", isCorrect: false },
+                    { text: "It broadcasts a warning frame to all devices, forcing them to pause indefinitely.", rationale: "The fundamental access method relies on listening and randomized back-off timers.", isCorrect: false }
+                ],
+                hint: "The device follows a \"listen before talk\" approach combined with randomized timers to avoid speaking over others."
+            },
+            {
+                q: "An office building has three Access Points deployed in close physical proximity to provide 2.4 GHz coverage. To minimize co-channel interference, which channel configuration should the administrator assign to these APs?",
+                options: [
+                    { text: "Channels 1, 6, and 11", rationale: "These are the only three standard channels in the 2.4 GHz spectrum with sufficient frequency separation to avoid overlapping.", isCorrect: true },
+                    { text: "Channels 1, 2, and 3", rationale: "These contiguous channels overlap heavily, creating severe interference.", isCorrect: false },
+                    { text: "Channels 36, 40, and 44", rationale: "These higher-numbered channels belong to the 5 GHz band.", isCorrect: false },
+                    { text: "Channels 11, 12, and 13", rationale: "These channels overlap each other and will cause adjacent-channel interference if placed nearby.", isCorrect: false }
+                ],
+                hint: "In this specific frequency band, adjacent channels bleed into each other, so significant numerical spacing is required."
+            },
+            {
+                q: "A user purchases a standard \"wireless router\" for their home network. Which internal logical component is strictly responsible for performing Network Address Translation (NAT) and forwarding traffic between the local LAN and the ISP's network?",
+                options: [
+                    { text: "The Router", rationale: "This component makes Layer 3 forwarding decisions and translates private internal IPs to the public WAN IP.", isCorrect: true },
+                    { text: "The Switch", rationale: "This component operates at Layer 2, facilitating direct communication between wired devices.", isCorrect: false },
+                    { text: "The Access Point", rationale: "This component acts as a bridge connecting wireless clients to the wired network.", isCorrect: false },
+                    { text: "The Stateful Firewall", rationale: "This inspects traffic states to block unsolicited inbound connections.", isCorrect: false }
+                ],
+                hint: "This specific function involves operating at Layer 3 of the OSI model to move packets across distinct networks."
+            },
+            {
+                q: "A cybersecurity team is upgrading a corporate Wi-Fi network from WPA2 to WPA3. Which new feature of WPA3 specifically prevents attackers from capturing a handshake and cracking the password offline using a dictionary?",
+                options: [
+                    { text: "Simultaneous Authentication of Equals (SAE)", rationale: "This feature forces an attacker to interact directly with the Access Point for each individual guess, making offline cracking impossible.", isCorrect: true },
+                    { text: "Protected Management Frames (PMF)", rationale: "This secures management traffic to prevent deauthentication attacks, not the password exchange.", isCorrect: false },
+                    { text: "Pre-Shared Key (PSK)", rationale: "This older implementation was vulnerable to offline cracking.", isCorrect: false },
+                    { text: "Orthogonal Frequency Division Multiple Access (OFDMA)", rationale: "This is a Wi-Fi 6 modulation technique entirely unrelated to encryption.", isCorrect: false }
+                ],
+                hint: "This mechanism replaces the older 4-way handshake with a method that requires live, continuous interaction."
+            },
+            {
+                q: "A systems administrator needs to ensure that the domain name www.acme.lan resolves to a new web server that uses an IPv6 address. Which type of DNS record must be created?",
+                options: [
+                    { text: "AAAA record", rationale: "This record specifically maps a hostname to a 128-bit IPv6 address.", isCorrect: true },
+                    { text: "A record", rationale: "This record is used strictly for mapping a hostname to a 32-bit IPv4 address.", isCorrect: false },
+                    { text: "CNAME record", rationale: "This creates an alias, pointing one domain name to another domain name.", isCorrect: false },
+                    { text: "MX record", rationale: "This record specifically directs email traffic to the appropriate mail servers.", isCorrect: false }
+                ],
+                hint: "Standard IPv4 records use a single letter, while the IPv6 equivalent uses four of the same letter."
+            }
+        ];
+
+        // Initialization
+        document.addEventListener("DOMContentLoaded", () => {
+            renderFlashcards();
+            renderQuiz();
+            document.getElementById("defaultOpen").click();
+        });
+
+        // Tab Logic
+        function openTab(evt, tabName) {
+            let i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        // Render Flashcards
+        function renderFlashcards() {
+            const container = document.getElementById("flashcard-container");
+            flashcardsData.forEach((card) => {
+                const cardEl = document.createElement("div");
+                cardEl.className = "flashcard";
+                cardEl.onclick = function() { this.classList.toggle("flipped"); };
+                
+                cardEl.innerHTML = `
+                    <div class="flashcard-inner">
+                        <div class="flashcard-front">${card.front}</div>
+                        <div class="flashcard-back">${card.back}</div>
+                    </div>
+                `;
+                container.appendChild(cardEl);
+            });
+        }
+
+        // Render Quiz
+        function renderQuiz() {
+            const container = document.getElementById("quiz-container");
+            quizData.forEach((qData, qIndex) => {
+                const qEl = document.createElement("div");
+                qEl.className = "question-container";
+                
+                let optionsHtml = qData.options.map((opt, optIndex) => `
+                    <li>
+                        <label>
+                            <input type="radio" name="q${qIndex}" value="${optIndex}">
+                            ${opt.text}
+                        </label>
+                        <div id="feedback-q${qIndex}-o${optIndex}" class="feedback">
+                            ${opt.rationale}
+                        </div>
+                    </li>
+                `).join('');
+
+                qEl.innerHTML = `
+                    <div class="question-text">${qIndex + 1}. ${qData.q}</div>
+                    <ul class="options-list">${optionsHtml}</ul>
+                    <button class="hint-btn" onclick="toggleHint('hint${qIndex}')">Show Hint</button>
+                    <div id="hint${qIndex}" class="hint-text">Hint: ${qData.hint}</div>
+                `;
+                container.appendChild(qEl);
+            });
+        }
+
+        // Hint Logic
+        function toggleHint(hintId) {
+            const hintEl = document.getElementById(hintId);
+            hintEl.style.display = hintEl.style.display === "block" ? "none" : "block";
+        }
+
+        // Grade Quiz
+        function gradeQuiz() {
+            quizData.forEach((qData, qIndex) => {
+                const selectedOption = document.querySelector(`input[name="q${qIndex}"]:checked`);
+                
+                // Hide all previous feedback for this question
+                qData.options.forEach((_, optIndex) => {
+                    const fb = document.getElementById(`feedback-q${qIndex}-o${optIndex}`);
+                    fb.classList.remove("correct", "incorrect");
+                });
+
+                if (selectedOption) {
+                    const optIndex = parseInt(selectedOption.value);
+                    const feedbackEl = document.getElementById(`feedback-q${qIndex}-o${optIndex}`);
+                    
+                    if (qData.options[optIndex].isCorrect) {
+                        feedbackEl.classList.add("correct");
+                        feedbackEl.innerHTML = "<strong>Correct!</strong> " + qData.options[optIndex].rationale;
+                    } else {
+                        feedbackEl.classList.add("incorrect");
+                        feedbackEl.innerHTML = "<strong>Incorrect.</strong> " + qData.options[optIndex].rationale;
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

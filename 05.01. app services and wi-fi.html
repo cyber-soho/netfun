@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 05 — Application Services & Wi-Fi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #fafaf9; color: #292524; }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 400px; }
+        }
+        .nav-active {
+            background-color: #fef3c7;
+            color: #b45309;
+            border-right-width: 4px;
+            border-right-color: #d97706;
+            font-weight: 600;
+        }
+        .tab-active {
+            background-color: #d97706;
+            color: #ffffff;
+        }
+        .tab-inactive {
+            background-color: #f5f5f4;
+            color: #57534e;
+        }
+        .hide { display: none !important; }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f5f5f4; }
+        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row h-screen overflow-hidden">
+
+    <!-- Chosen Palette: Warm Neutrals & Amber Accents (Stone-50 background, Amber-600 primary, White cards) -->
+    <!-- Application Structure Plan: A tabbed dashboard layout with a persistent sidebar. Reorganizes linear lecture notes into logical, self-contained interactive modules: Overview, Transport Layer, Local Networking (VLANs/App Services), Wi-Fi Technology, and Labs. This modular architecture supports non-linear exploration and quick reference, improving student consumption of dense technical data while maintaining context. -->
+    <!-- Visualization & Content Choices: 1. Wi-Fi Evolution -> Bar Chart (Chart.js) -> Compare max speeds over time -> Shows exponential growth clearly. 2. Ports -> Interactive Search -> Quick lookup utility for memorization. 3. TCP vs UDP -> Toggle panels -> Emphasizes comparison and distinct use cases. 4. VLANs -> Interactive Grid -> Hover effects to reveal subnet details. 5. Icons -> Unicode text characters -> Fulfills NO SVG constraint while providing visual anchors. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <nav class="w-full md:w-64 bg-white border-r border-stone-200 flex flex-col shadow-sm z-10 shrink-0 h-auto md:h-full">
+        <div class="p-6 border-b border-stone-100">
+            <h1 class="text-xl font-bold text-stone-800 leading-tight">Cyber.SoHo</h1>
+            <p class="text-xs text-stone-500 mt-1 uppercase tracking-widest font-semibold">Educational Hub</p>
+            <div class="mt-4 px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full inline-block">Day 05</div>
+        </div>
+        <div class="flex-1 overflow-x-auto md:overflow-y-auto flex md:flex-col p-2 space-x-2 md:space-x-0 md:space-y-1">
+            <button onclick="nav('overview')" id="nav-overview" class="nav-active flex-1 md:flex-none text-left px-4 py-3 rounded-lg text-sm transition-colors whitespace-nowrap md:whitespace-normal">
+                <span class="mr-2">🏠</span> Overview
+            </button>
+            <button onclick="nav('transport')" id="nav-transport" class="text-stone-600 hover:bg-stone-100 flex-1 md:flex-none text-left px-4 py-3 rounded-lg text-sm transition-colors whitespace-nowrap md:whitespace-normal">
+                <span class="mr-2">🛤️</span> Transport & Ports
+            </button>
+            <button onclick="nav('localnet')" id="nav-localnet" class="text-stone-600 hover:bg-stone-100 flex-1 md:flex-none text-left px-4 py-3 rounded-lg text-sm transition-colors whitespace-nowrap md:whitespace-normal">
+                <span class="mr-2">🏢</span> Local Network
+            </button>
+            <button onclick="nav('wifi')" id="nav-wifi" class="text-stone-600 hover:bg-stone-100 flex-1 md:flex-none text-left px-4 py-3 rounded-lg text-sm transition-colors whitespace-nowrap md:whitespace-normal">
+                <span class="mr-2">📡</span> Wi-Fi Technology
+            </button>
+            <button onclick="nav('labs')" id="nav-labs" class="text-stone-600 hover:bg-stone-100 flex-1 md:flex-none text-left px-4 py-3 rounded-lg text-sm transition-colors whitespace-nowrap md:whitespace-normal">
+                <span class="mr-2">🧪</span> Lab Exercises
+            </button>
+        </div>
+        <div class="p-4 border-t border-stone-100 text-xs text-stone-400 text-center md:text-left">
+            NetEss 3.0 Aligned<br>Session 5 of 6
+        </div>
+    </nav>
+
+    <main class="flex-1 overflow-y-auto bg-stone-50 p-4 md:p-8 relative">
+        <div class="max-w-5xl mx-auto">
+
+            <section id="view-overview" class="block animate-fade-in">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-bold text-stone-800">Application Services & Wi-Fi</h2>
+                    <p class="text-stone-500 mt-2 text-lg">Basics of Computer Networks</p>
+                </header>
+                
+                <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm mb-8 border-l-4 border-l-amber-500">
+                    <p class="text-stone-700 leading-relaxed text-lg">
+                        Welcome to the Day 05 interactive module. This section provides a high-level summary of our mission to turn a wired network into a fully functional city with naming services, web hosting, and wireless access. Use the navigation to explore specific topics, interact with data visualizations, and prepare for the practical labs.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm card-hover transition-transform">
+                        <h3 class="text-xl font-bold text-stone-800 mb-3 flex items-center"><span class="text-2xl mr-2">🎯</span> Today's Mission</h3>
+                        <p class="text-stone-600">Turn the wired neighborhood built on Day 04 into a city — complete with names, web services, and wireless clients.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm card-hover transition-transform bg-gradient-to-br from-amber-50 to-white">
+                        <h3 class="text-xl font-bold text-amber-800 mb-3 flex items-center"><span class="text-2xl mr-2">💡</span> Key Takeaway</h3>
+                        <p class="text-amber-900 font-medium">By the end of today, your Acme SoHo network will resolve names, serve a web page, and accept Wi-Fi clients.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                    <h3 class="text-xl font-bold text-stone-800 mb-4 flex items-center"><span class="text-2xl mr-2">📋</span> Session Agenda</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <div class="bg-stone-100 text-stone-600 font-bold px-3 py-1 rounded mr-4 mt-0.5">60m</div>
+                            <div>
+                                <h4 class="font-bold text-stone-800">Lecture 1 — Client-Server Interaction</h4>
+                                <p class="text-stone-500 text-sm">Transport layer protocols, port numbers, VLANs, and application services.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-stone-100 text-stone-600 font-bold px-3 py-1 rounded mr-4 mt-0.5">60m</div>
+                            <div>
+                                <h4 class="font-bold text-stone-800">Exercise 1 — Application Services Lab</h4>
+                                <p class="text-stone-500 text-sm">Analyzing ARP, DNS, and HTTP traffic in Wireshark.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-stone-100 text-stone-600 font-bold px-3 py-1 rounded mr-4 mt-0.5">60m</div>
+                            <div>
+                                <h4 class="font-bold text-stone-800">Lecture 2 — Wi-Fi Technology</h4>
+                                <p class="text-stone-500 text-sm">Wireless standards, CSMA/CA, security, and router architecture.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-stone-100 text-stone-600 font-bold px-3 py-1 rounded mr-4 mt-0.5">60m</div>
+                            <div>
+                                <h4 class="font-bold text-stone-800">Exercise 2 — Project Stage 5</h4>
+                                <p class="text-stone-500 text-sm">Deploying DNS, HTTP, and optional Wi-Fi on the Acme network.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-transport" class="hide animate-fade-in">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-bold text-stone-800">Transport & Ports</h2>
+                    <p class="text-stone-500 mt-2 text-lg">Layer 4 Mechanisms and Addressing</p>
+                </header>
+
+                <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm mb-8 border-l-4 border-l-amber-500">
+                    <p class="text-stone-700 leading-relaxed text-lg">
+                        Explore the Transport Layer of the OSI model. Here, you will find interactive comparisons between TCP and UDP, and a searchable index of critical port numbers that direct network traffic to the correct applications.
+                    </p>
+                </div>
+
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold text-stone-800 mb-4">TCP vs UDP Protocol Switcher</h3>
+                    <div class="flex space-x-2 mb-4 bg-stone-100 p-1 rounded-lg w-full md:w-fit">
+                        <button onclick="toggleProtocol('tcp')" id="btn-tcp" class="tab-active px-6 py-2 rounded-md font-bold text-sm transition-colors flex-1 md:flex-none">TCP</button>
+                        <button onclick="toggleProtocol('udp')" id="btn-udp" class="tab-inactive px-6 py-2 rounded-md font-bold text-sm transition-colors flex-1 md:flex-none">UDP</button>
+                    </div>
+
+                    <div id="content-tcp" class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4 border-b border-stone-100 pb-4">
+                            <h4 class="text-xl font-bold text-stone-800">Transmission Control Protocol</h4>
+                            <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">Reliable</span>
+                        </div>
+                        <ul class="space-y-3 text-stone-600 mb-6">
+                            <li class="flex items-start"><span class="text-amber-500 mr-2">✓</span> <strong>Connection-oriented:</strong> Requires a three-way handshake (SYN → SYN-ACK → ACK) before data flows.</li>
+                            <li class="flex items-start"><span class="text-amber-500 mr-2">✓</span> <strong>Reliable & Ordered:</strong> Every byte is numbered. Retransmits losses and reorders out-of-order segments.</li>
+                            <li class="flex items-start"><span class="text-amber-500 mr-2">✓</span> <strong>Graceful Teardown:</strong> Closes cleanly with a FIN packet.</li>
+                            <li class="flex items-start"><span class="text-stone-400 mr-2">!</span> <strong>Overhead:</strong> 20-byte minimum header and maintains per-connection state.</li>
+                        </ul>
+                        <div class="bg-stone-50 p-4 rounded-lg">
+                            <strong class="text-stone-800 block mb-2">Use Cases:</strong>
+                            Web (HTTP/HTTPS), Email, SSH, File Transfer. Use when bytes must all arrive, in order.
+                        </div>
+                    </div>
+
+                    <div id="content-udp" class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm hide transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4 border-b border-stone-100 pb-4">
+                            <h4 class="text-xl font-bold text-stone-800">User Datagram Protocol</h4>
+                            <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">Best-Effort</span>
+                        </div>
+                        <ul class="space-y-3 text-stone-600 mb-6">
+                            <li class="flex items-start"><span class="text-amber-500 mr-2">✓</span> <strong>Connectionless:</strong> No handshake, no ACKs, no retransmits. Just shouts and walks away.</li>
+                            <li class="flex items-start"><span class="text-amber-500 mr-2">✓</span> <strong>Low Overhead:</strong> Only an 8-byte header.</li>
+                            <li class="flex items-start"><span class="text-amber-500 mr-2">✓</span> <strong>Low Latency:</strong> Faster delivery because it doesn't wait for acknowledgments.</li>
+                            <li class="flex items-start"><span class="text-stone-400 mr-2">!</span> <strong>Application Reliability:</strong> The application must handle its own reliability if needed.</li>
+                        </ul>
+                        <div class="bg-stone-50 p-4 rounded-lg">
+                            <strong class="text-stone-800 block mb-2">Use Cases:</strong>
+                            DNS lookups, VoIP, Live Video, Online Games, DHCP. Use when a late packet is worse than a missing one.
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-bold text-stone-800 mb-4">Well-Known Ports Interactive Directory</h3>
+                    <p class="text-stone-600 mb-4">A port is a 16-bit number (0–65,535) that tells the OS which application a packet belongs to. Search below to filter the top 10 ports every networker must memorize.</p>
+                    
+                    <div class="mb-4 relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-stone-400">🔍</span>
+                        <input type="text" id="portSearch" onkeyup="filterPorts()" placeholder="Search by port number, protocol, or use..." class="w-full pl-10 pr-4 py-3 rounded-lg border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all">
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-stone-200 overflow-hidden shadow-sm">
+                        <table class="min-w-full divide-y divide-stone-200 text-left text-sm">
+                            <thead class="bg-stone-50">
+                                <tr>
+                                    <th class="px-6 py-3 font-bold text-stone-500 uppercase tracking-wider">Port</th>
+                                    <th class="px-6 py-3 font-bold text-stone-500 uppercase tracking-wider">Protocol</th>
+                                    <th class="px-6 py-3 font-bold text-stone-500 uppercase tracking-wider">Layer 4</th>
+                                    <th class="px-6 py-3 font-bold text-stone-500 uppercase tracking-wider">Function</th>
+                                </tr>
+                            </thead>
+                            <tbody id="portTableBody" class="divide-y divide-stone-200 bg-white">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start">
+                        <span class="text-xl mr-3">🧠</span>
+                        <p class="text-amber-800 text-sm"><strong>Mental Model:</strong> Ports &lt; 1024 are the post office's named windows. Ports 49,152+ are the customer's return address (different each visit). A <em>socket</em> is the unique combination of source IP, source port, destination IP, and destination port.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-localnet" class="hide animate-fade-in">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-bold text-stone-800">Local Network & Services</h2>
+                    <p class="text-stone-500 mt-2 text-lg">Segmentation and Core Applications</p>
+                </header>
+
+                <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm mb-8 border-l-4 border-l-amber-500">
+                    <p class="text-stone-700 leading-relaxed text-lg">
+                        Understand how local networks are segmented and the core services that run on them. This section visualizes our Acme SoHo VLAN plan and explains essential application protocols like DNS, HTTP, and ARP.
+                    </p>
+                </div>
+
+                <div class="mb-10">
+                    <h3 class="text-2xl font-bold text-stone-800 mb-2">Why LAN Segmentation Matters</h3>
+                    <p class="text-stone-600 mb-6">One flat LAN equals one broadcast domain. Broadcast storms and security incidents scale with hosts. Segmenting via VLANs (Virtual LANs - IEEE 802.1Q) provides Performance, Security, and Manageability.</p>
+                    
+                    <h4 class="text-lg font-bold text-stone-800 mb-4">Acme SoHo VLAN Architecture</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="vlanGrid">
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-bold text-stone-800 mb-4">Application-Layer Services Directory</h3>
+                    <p class="text-stone-600 mb-6">Select a service family below to view its operational details and underlying protocols.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6" id="servicesGrid">
+                    </div>
+
+                    <div id="serviceDetailCard" class="bg-white p-6 rounded-xl border border-stone-200 shadow-lg mt-6 hidden transition-all">
+                        <div class="flex justify-between items-start mb-4">
+                            <h4 id="sdTitle" class="text-2xl font-bold text-stone-800"></h4>
+                            <button onclick="closeServiceDetail()" class="text-stone-400 hover:text-stone-700 text-xl font-bold">✕</button>
+                        </div>
+                        <div id="sdContent" class="text-stone-600 space-y-3"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-wifi" class="hide animate-fade-in">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-bold text-stone-800">Wi-Fi Technology</h2>
+                    <p class="text-stone-500 mt-2 text-lg">Wireless Standards, Operation, and Security</p>
+                </header>
+
+                <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm mb-8 border-l-4 border-l-amber-500">
+                    <p class="text-stone-700 leading-relaxed text-lg">
+                        Dive into the evolution and mechanics of wireless networking. This module features an interactive chart of 802.11 standards, explains the CSMA/CA protocol, and outlines modern WPA3 security practices.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="md:col-span-2 bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                        <h3 class="text-xl font-bold text-stone-800 mb-2">Evolution of Wi-Fi Speeds</h3>
+                        <p class="text-sm text-stone-500 mb-6">Maximum theoretical rates (Mbps) across IEEE 802.11 standards.</p>
+                        <div class="chart-container">
+                            <canvas id="wifiChart"></canvas>
+                        </div>
+                        <p class="text-xs text-stone-400 mt-4 text-center">Note: Logarithmic scale used due to exponential growth (54 Mbps to 46,000 Mbps).</p>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                            <h3 class="text-lg font-bold text-stone-800 mb-3 flex items-center"><span class="text-xl mr-2">📦</span> The "Router" Box</h3>
+                            <p class="text-stone-600 text-sm mb-3">A typical home router is actually four devices in one case:</p>
+                            <ul class="text-sm text-stone-600 space-y-2">
+                                <li><span class="font-bold text-stone-800">1. Router:</span> Layer-3 forwarding & NAT</li>
+                                <li><span class="font-bold text-stone-800">2. Switch:</span> Layer-2 wired ports</li>
+                                <li><span class="font-bold text-stone-800">3. Access Point:</span> 802.11 radios</li>
+                                <li><span class="font-bold text-stone-800">4. Firewall:</span> Stateful blocking</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-amber-50 p-6 rounded-xl border border-amber-200 shadow-sm">
+                            <h3 class="text-lg font-bold text-amber-900 mb-2 flex items-center"><span class="text-xl mr-2">🚦</span> CSMA / CA</h3>
+                            <p class="text-amber-800 text-sm mb-2"><strong>Collision Avoidance</strong></p>
+                            <ol class="text-sm text-amber-800 list-decimal pl-4 space-y-1">
+                                <li><strong>Listen:</strong> Is channel free?</li>
+                                <li>Wait if busy.</li>
+                                <li>Wait random back-off time.</li>
+                                <li>Transmit data.</li>
+                                <li>Wait for ACK. If no ACK, assume collision, back off, retry.</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                    <h3 class="text-2xl font-bold text-stone-800 mb-4 flex items-center"><span class="text-2xl mr-2">🔒</span> Wi-Fi Security & WPA3</h3>
+                    <div class="overflow-x-auto mb-6">
+                        <table class="min-w-full text-left text-sm border-collapse">
+                            <thead>
+                                <tr class="border-b border-stone-200">
+                                    <th class="py-2 px-4 text-stone-500 font-bold">Standard</th>
+                                    <th class="py-2 px-4 text-stone-500 font-bold">Year</th>
+                                    <th class="py-2 px-4 text-stone-500 font-bold">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b border-stone-100"><td class="py-2 px-4 font-bold text-red-600">WEP</td><td class="py-2 px-4">1997</td><td class="py-2 px-4">Broken — never use</td></tr>
+                                <tr class="border-b border-stone-100"><td class="py-2 px-4 font-bold">WPA</td><td class="py-2 px-4">2003</td><td class="py-2 px-4">Stopgap</td></tr>
+                                <tr class="border-b border-stone-100"><td class="py-2 px-4 font-bold">WPA2</td><td class="py-2 px-4">2004</td><td class="py-2 px-4">Industry default 2006–2020</td></tr>
+                                <tr class="bg-green-50"><td class="py-2 px-4 font-bold text-green-700">WPA3</td><td class="py-2 px-4 text-green-700">2018</td><td class="py-2 px-4 text-green-700 font-medium">Current best practice</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-bold text-stone-800 mb-2">What WPA3 Fixes</h4>
+                            <ul class="list-disc pl-5 text-sm text-stone-600 space-y-1">
+                                <li><strong>SAE:</strong> Replaces 4-way handshake, kills offline dictionary attacks.</li>
+                                <li><strong>Forward Secrecy:</strong> Today's traffic capture doesn't decrypt yesterday's.</li>
+                                <li><strong>PMF:</strong> Protected Management Frames stops deauth attacks.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-stone-800 mb-2">Safer Defaults</h4>
+                            <ul class="list-disc pl-5 text-sm text-stone-600 space-y-1">
+                                <li>Separate SSID for internet-only guests.</li>
+                                <li>Disable WPS (Wi-Fi Protected Setup).</li>
+                                <li>Long passphrase (16+ chars random).</li>
+                                <li>Use WPA3-Personal or Transition mode.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-labs" class="hide animate-fade-in">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-bold text-stone-800">Lab Exercises</h2>
+                    <p class="text-stone-500 mt-2 text-lg">Practical Application and Project Stage 5</p>
+                </header>
+
+                <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm mb-8 border-l-4 border-l-amber-500">
+                    <p class="text-stone-700 leading-relaxed text-lg">
+                        Apply your theoretical knowledge through practical exercises. This section details step-by-step instructions for capturing packets in Wireshark and deploying DNS and HTTP services to your Acme network.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                    <div class="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
+                        <div class="bg-stone-50 p-4 border-b border-stone-200 flex justify-between items-center">
+                            <h3 class="text-xl font-bold text-stone-800">Ex 1: Wireshark Captures</h3>
+                            <span class="bg-stone-200 text-stone-600 text-xs font-bold px-2 py-1 rounded">60 MIN</span>
+                        </div>
+                        <div class="p-6">
+                            <p class="text-stone-600 mb-4"><strong>Goal:</strong> Capture and decode three real packets: ARP, DNS, HTTP GET.</p>
+                            
+                            <div class="space-y-4">
+                                <div class="border-l-2 border-amber-400 pl-4">
+                                    <h4 class="font-bold text-stone-800 text-sm">Part A — ARP</h4>
+                                    <p class="text-sm text-stone-500 mt-1">Clear cache (<code class="bg-stone-100 px-1 rounded">arp -d *</code>). Filter: <code class="bg-stone-100 px-1 rounded">arp</code>. Ping gateway. Verify broadcast "Who has X" and unicast reply.</p>
+                                </div>
+                                <div class="border-l-2 border-blue-400 pl-4">
+                                    <h4 class="font-bold text-stone-800 text-sm">Part B — DNS</h4>
+                                    <p class="text-sm text-stone-500 mt-1">Filter: <code class="bg-stone-100 px-1 rounded">dns</code>. Run <code class="bg-stone-100 px-1 rounded">nslookup www.cyber.soho</code>. Identify Query (A record), Response, TTL.</p>
+                                </div>
+                                <div class="border-l-2 border-green-400 pl-4">
+                                    <h4 class="font-bold text-stone-800 text-sm">Part C — HTTP GET</h4>
+                                    <p class="text-sm text-stone-500 mt-1">Filter: <code class="bg-stone-100 px-1 rounded">http.request.method == "GET"</code>. Browse plain-HTTP site. Follow HTTP Stream. Read headers & status.</p>
+                                </div>
+                            </div>
+                            <div class="mt-6 p-4 bg-stone-50 rounded-lg">
+                                <h4 class="text-sm font-bold text-stone-800 mb-2 flex items-center"><span class="mr-2">🔧</span> Alternative Tools</h4>
+                                <p class="text-xs text-stone-500 leading-tight">tshark (CLI sibling), tcpdump (UNIX sniffer), Ettercap/Bettercap (analysis/MITM), netcat (manual probes), mitmproxy (HTTPS inspection).</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
+                        <div class="bg-stone-50 p-4 border-b border-stone-200 flex justify-between items-center">
+                            <h3 class="text-xl font-bold text-stone-800">Ex 2: Add DNS + HTTP Server</h3>
+                            <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded">PROJECT STAGE 5</span>
+                        </div>
+                        <div class="p-6">
+                            <ol class="list-decimal pl-5 text-sm text-stone-600 space-y-3 mb-6">
+                                <li><strong>Add VM:</strong> Attach Linux VM to SERVERS VLAN (IP 192.168.20.10/24).</li>
+                                <li><strong>Install DNS:</strong> <code class="bg-stone-100 px-1 rounded">apt install dnsmasq</code>. Configure domains to point to .10, .50, .1.</li>
+                                <li><strong>Install HTTP:</strong> Run python web server or nginx on port 8080.</li>
+                                <li><strong>Update DHCP:</strong> Tell STAFF VLAN router pool to use <code class="bg-stone-100 px-1 rounded">dns-server 192.168.20.10</code>. Renew client IP.</li>
+                                <li><strong>Verify:</strong> From staff client: <code class="bg-stone-100 px-1 rounded">nslookup www.acme.lan</code> and <code class="bg-stone-100 px-1 rounded">curl http://www.acme.lan:8080</code>.</li>
+                            </ol>
+                            
+                            <div class="bg-amber-50 border border-amber-200 p-4 rounded-lg">
+                                <h4 class="text-sm font-bold text-amber-900 mb-2">Optional Wi-Fi Segment</h4>
+                                <ul class="text-xs text-amber-800 space-y-1">
+                                    <li>★☆☆ GNS3 Cloud node (host Wi-Fi)</li>
+                                    <li>★★☆ Mininet-WiFi (software emulator)</li>
+                                    <li>★★★ OpenWrt VM (full AP firmware)</li>
+                                </ul>
+                                <p class="text-xs text-amber-900 mt-2 font-medium">Rule: Bridge to GUEST VLAN (internet only), must NOT reach SERVERS.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        const state = { view: 'overview' };
+
+        const portData = [
+            { port: "20 / 21", protocol: "FTP", layer4: "TCP", func: "File Transfer (data / control)" },
+            { port: "22", protocol: "SSH", layer4: "TCP", func: "Secure remote shell" },
+            { port: "23", protocol: "Telnet", layer4: "TCP", func: "Plain-text remote shell (legacy)" },
+            { port: "25", protocol: "SMTP", layer4: "TCP", func: "Mail submission/relay" },
+            { port: "53", protocol: "DNS", layer4: "UDP+TCP", func: "Name resolution" },
+            { port: "67 / 68", protocol: "DHCP", layer4: "UDP", func: "Server / Client" },
+            { port: "80", protocol: "HTTP", layer4: "TCP", func: "Web (plaintext)" },
+            { port: "110", protocol: "POP3", layer4: "TCP", func: "Mail retrieval (download-and-delete)" },
+            { port: "143", protocol: "IMAP", layer4: "TCP", func: "Mail retrieval (server-side folders)" },
+            { port: "443", protocol: "HTTPS", layer4: "TCP", func: "Web over TLS" }
+        ];
+
+        const vlanData = [
+            { id: 10, name: "STAFF", subnet: "192.168.10.0/24", purpose: "8 employee endpoints", color: "bg-blue-100 border-blue-300 text-blue-800" },
+            { id: 20, name: "SERVERS", subnet: "192.168.20.0/24", purpose: "DNS, HTTP, file", color: "bg-purple-100 border-purple-300 text-purple-800" },
+            { id: 30, name: "VOICE", subnet: "192.168.30.0/24", purpose: "VoIP phones", color: "bg-green-100 border-green-300 text-green-800" },
+            { id: 40, name: "GUEST", subnet: "192.168.40.0/24", purpose: "Visitor Wi-Fi (internet-only)", color: "bg-orange-100 border-orange-300 text-orange-800" },
+            { id: 99, name: "MGMT", subnet: "192.168.99.0/24", purpose: "Switch/AP admin", color: "bg-stone-200 border-stone-400 text-stone-800" }
+        ];
+
+        const servicesData = {
+            "ARP": { icon: "🔍", title: "Address Resolution Protocol", content: "<p>Maps a Layer-3 IPv4 address to a Layer-2 MAC address on the same broadcast domain.</p><ul class='list-disc pl-5 mt-2 space-y-1'><li>Host broadcasts: 'Who has IP? Tell me.'</li><li>Owner replies unicast with MAC.</li><li>Both cache binding.</li><li><strong>Warning:</strong> No authentication allows ARP-spoofing (MITM).</li></ul>" },
+            "DNS": { icon: "📖", title: "Domain Name System", content: "<p>Translates names to IPs (and back). Hierarchical system (root -> TLD -> authoritative).</p><ul class='list-disc pl-5 mt-2 space-y-1'><li><strong>Records:</strong> A (IPv4), AAAA (IPv6), CNAME (alias), MX (mail).</li><li><strong>Transport:</strong> Usually UDP/53 (fast), TCP/53 for large transfers.</li><li><strong>Modern:</strong> DoH (HTTPS), DoT (TLS) for privacy.</li></ul>" },
+            "HTTP": { icon: "🌐", title: "HTTP / HTML", content: "<p>Hypertext Transfer Protocol (request/response over TCP/80 or 443 for HTTPS).</p><ul class='list-disc pl-5 mt-2 space-y-1'><li><strong>Request:</strong> Method (GET, POST), Headers.</li><li><strong>Response:</strong> Status code (200 OK, 404), Headers, Body.</li><li><strong>HTML:</strong> The markup language document returned.</li></ul>" },
+            "FTP": { icon: "📁", title: "File Transfer Protocol", content: "<p>Moves files between systems.</p><ul class='list-disc pl-5 mt-2 space-y-1'><li>Two channels: Control (TCP/21) + Data (TCP/20).</li><li><strong>Warning:</strong> Plaintext credentials.</li><li><strong>Alternatives:</strong> SFTP (runs inside SSH/22) or FTPS (TLS wrapped).</li></ul>" },
+            "SSH": { icon: "⌨️", title: "Telnet vs SSH", content: "<p>Remote shell access.</p><ul class='list-disc pl-5 mt-2 space-y-1'><li><strong>Telnet (TCP/23):</strong> Legacy. Plaintext. Never use over untrusted networks.</li><li><strong>SSH (TCP/22):</strong> Industry standard. Strong encryption (AES), public-key auth.</li></ul>" },
+            "EMAIL": { icon: "✉️", title: "Email Protocols", content: "<p>The mail delivery trifecta.</p><ul class='list-disc pl-5 mt-2 space-y-1'><li><strong>SMTP (TCP/25, 587):</strong> Sends/relays mail.</li><li><strong>POP3 (TCP/110):</strong> Downloads to one device, deletes from server.</li><li><strong>IMAP (TCP/143):</strong> Keeps mail on server, syncs across multiple devices.</li></ul>" }
+        };
+
+        function nav(viewId) {
+            const views = ['overview', 'transport', 'localnet', 'wifi', 'labs'];
+            views.forEach(v => {
+                document.getElementById('view-' + v).classList.add('hide');
+                document.getElementById('nav-' + v).classList.remove('nav-active');
+                document.getElementById('nav-' + v).classList.add('text-stone-600');
+            });
+            document.getElementById('view-' + viewId).classList.remove('hide');
+            document.getElementById('nav-' + viewId).classList.add('nav-active');
+            document.getElementById('nav-' + viewId).classList.remove('text-stone-600');
+            state.view = viewId;
+        }
+
+        function toggleProtocol(proto) {
+            if(proto === 'tcp') {
+                document.getElementById('btn-tcp').className = 'tab-active px-6 py-2 rounded-md font-bold text-sm transition-colors flex-1 md:flex-none';
+                document.getElementById('btn-udp').className = 'tab-inactive px-6 py-2 rounded-md font-bold text-sm transition-colors flex-1 md:flex-none hover:bg-stone-200';
+                document.getElementById('content-tcp').classList.remove('hide');
+                document.getElementById('content-udp').classList.add('hide');
+            } else {
+                document.getElementById('btn-udp').className = 'tab-active px-6 py-2 rounded-md font-bold text-sm transition-colors flex-1 md:flex-none';
+                document.getElementById('btn-tcp').className = 'tab-inactive px-6 py-2 rounded-md font-bold text-sm transition-colors flex-1 md:flex-none hover:bg-stone-200';
+                document.getElementById('content-udp').classList.remove('hide');
+                document.getElementById('content-tcp').classList.add('hide');
+            }
+        }
+
+        function renderPorts(data) {
+            const tbody = document.getElementById('portTableBody');
+            tbody.innerHTML = '';
+            data.forEach(p => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-stone-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap font-mono font-bold text-amber-700">${p.port}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-bold text-stone-800">${p.protocol}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-stone-500"><span class="bg-stone-100 px-2 py-1 rounded text-xs">${p.layer4}</span></td>
+                        <td class="px-6 py-4 text-stone-600">${p.func}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function filterPorts() {
+            const term = document.getElementById('portSearch').value.toLowerCase();
+            const filtered = portData.filter(p => 
+                p.port.toLowerCase().includes(term) || 
+                p.protocol.toLowerCase().includes(term) || 
+                p.func.toLowerCase().includes(term)
+            );
+            renderPorts(filtered);
+        }
+
+        function renderVLANs() {
+            const grid = document.getElementById('vlanGrid');
+            vlanData.forEach(v => {
+                grid.innerHTML += `
+                    <div class="border-2 ${v.color} p-4 rounded-xl shadow-sm card-hover transition-transform bg-white relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 p-2 text-4xl opacity-10 font-black tracking-tighter -mt-2 -mr-2">${v.id}</div>
+                        <h4 class="font-bold text-lg mb-1 relative z-10">VLAN ${v.id} <span class="font-normal opacity-75">| ${v.name}</span></h4>
+                        <div class="font-mono text-sm opacity-90 mb-2 relative z-10">${v.subnet}</div>
+                        <p class="text-sm font-medium relative z-10">${v.purpose}</p>
+                    </div>
+                `;
+            });
+        }
+
+        function renderServicesGrid() {
+            const grid = document.getElementById('servicesGrid');
+            Object.keys(servicesData).forEach(key => {
+                grid.innerHTML += `
+                    <button onclick="showServiceDetail('${key}')" class="bg-white border border-stone-200 p-4 rounded-xl shadow-sm hover:border-amber-400 hover:shadow-md transition-all text-left flex items-center">
+                        <span class="text-3xl mr-4">${servicesData[key].icon}</span>
+                        <span class="font-bold text-stone-800 text-lg">${key}</span>
+                    </button>
+                `;
+            });
+        }
+
+        function showServiceDetail(key) {
+            const data = servicesData[key];
+            document.getElementById('sdTitle').innerHTML = `<span class="mr-2">${data.icon}</span> ${data.title}`;
+            document.getElementById('sdContent').innerHTML = data.content;
+            document.getElementById('serviceDetailCard').classList.remove('hidden');
+        }
+
+        function closeServiceDetail() {
+            document.getElementById('serviceDetailCard').classList.add('hidden');
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('wifiChart').getContext('2d');
+            
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = '#78716c';
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['802.11a (1999)', '802.11b (1999)', '802.11g (2003)', 'Wi-Fi 4 (n)', 'Wi-Fi 5 (ac)', 'Wi-Fi 6 (ax)', 'Wi-Fi 7 (be)'],
+                    datasets: [{
+                        label: 'Max Theoretical Rate (Mbps)',
+                        data: [54, 11, 54, 600, 6900, 9600, 46000],
+                        backgroundColor: [
+                            '#e7e5e4', '#e7e5e4', '#d6d3d1', '#fcd34d', '#fbbf24', '#f59e0b', '#d97706'
+                        ],
+                        borderRadius: 4,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#292524',
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    let val = context.raw;
+                                    if(val >= 1000) return (val/1000).toFixed(1) + ' Gbps';
+                                    return val + ' Mbps';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'logarithmic',
+                            title: { display: true, text: 'Speed (Mbps) - Log Scale', font: {weight: 'bold'} },
+                            grid: { color: '#f5f5f4' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                callback: function(value) {
+                                    const label = this.getLabelForValue(value);
+                                    if (label.length > 16) {
+                                        return label.substr(0, 16) + '...';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderPorts(portData);
+            renderVLANs();
+            renderServicesGrid();
+            initChart();
+            
+            const style = document.createElement('style');
+            style.innerHTML = `
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+</html>
+
+
+
