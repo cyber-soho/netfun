@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Security Study Guide</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        /* Tab Styles */
+        .tab {
+            overflow: hidden;
+            border-bottom: 2px solid #3498db;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .tab button {
+            background-color: inherit;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 24px;
+            transition: 0.3s;
+            font-size: 18px;
+            font-weight: bold;
+            color: #7f8c8d;
+            border-radius: 8px 8px 0 0;
+        }
+        .tab button:hover {
+            background-color: #e0f2fe;
+            color: #2980b9;
+        }
+        .tab button.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .tabcontent {
+            display: none;
+            animation: fadeEffect 0.5s;
+        }
+        @keyframes fadeEffect {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+
+        /* Flashcard Styles */
+        .flashcard-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            max-width: 1200px;
+            margin: auto;
+        }
+        .flip-card {
+            background-color: transparent;
+            width: 320px;
+            height: 220px;
+            perspective: 1000px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            font-size: 18px;
+        }
+        .flip-card-front {
+            background-color: #ffffff;
+            color: #2c3e50;
+            border: 2px solid #3498db;
+            font-weight: bold;
+        }
+        .flip-card-back {
+            background-color: #3498db;
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        /* Quiz Styles */
+        .quiz-container {
+            max-width: 800px;
+            margin: auto;
+        }
+        .question-card {
+            background: white;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .question-card h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .hint {
+            font-size: 0.9em;
+            color: #e67e22;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .option {
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            cursor: default;
+        }
+        .correct-answer {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+            font-weight: bold;
+        }
+        .incorrect-answer {
+            opacity: 0.6;
+        }
+        .rationale-box {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: #e9ecef;
+            border-left: 5px solid #3498db;
+            border-radius: 4px;
+        }
+        .reveal-btn {
+            margin-top: 15px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .reveal-btn:hover {
+            background-color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Network Security Study Module</h1>
+
+    <div class="tab">
+        <button class="tablinks active" onclick="openTab(event, 'Flashcards')">Flashcards (25)</button>
+        <button class="tablinks" onclick="openTab(event, 'Quiz')">Practice Quiz (10)</button>
+    </div>
+
+    <div id="Flashcards" class="tabcontent" style="display: block;">
+        <div class="flashcard-container" id="cards-wrapper">
+            </div>
+    </div>
+
+    <div id="Quiz" class="tabcontent">
+        <div class="quiz-container" id="quiz-wrapper">
+            </div>
+    </div>
+
+    <script>
+        // --- Tab Logic ---
+        function openTab(evt, tabName) {
+            let i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        // --- Flashcard Data & Generation ---
+        const flashcardData = [
+            { front: "The CIA Triad", back: "Confidentiality, Integrity, Availability - the three properties required for comprehensive security." },
+            { front: "Confidentiality (CIA Triad)", back: "Ensuring that only the people who should see the data can see it (e.g., via encryption or role-based access control)." },
+            { front: "Integrity (CIA Triad)", back: "Ensuring that data has not been changed or tampered with in flight (e.g., via cryptographic hashing)." },
+            { front: "Availability (CIA Triad)", back: "Ensuring that data and services are accessible when the legitimate user asks for them." },
+            { front: "Differences between Phishing, Vishing, and Smishing", back: "Phishing uses fraudulent emails, Vishing uses voice calls, and Smishing uses SMS texts to socially engineer victims." },
+            { front: "Virus (Malware type)", back: "Malicious software that needs a host file or program to attach to and spreads when the host is opened." },
+            { front: "Worm (Malware type)", back: "Self-replicating malware that spreads across a network on its own, without needing a host file (e.g., WannaCry)." },
+            { front: "Trojan (Malware type)", back: "Malware disguised as a legitimate payload that the user willingly installs." },
+            { front: "Ransomware", back: "Malware that encrypts the victim's files and demands payment, often combined with data exfiltration (double extortion)." },
+            { front: "Distributed Denial of Service (DDoS) Attack", back: "An attack that attempts to make a service unavailable by flooding it with traffic from thousands of compromised machines (a botnet)." },
+            { front: "Brute Force vs. Password Spraying", back: "Brute force tries many passwords against one account (noisy), while password spraying tries one common password against many accounts to avoid lockouts." },
+            { front: "Primary defense against password spraying", back: "Conditional access with Multi-Factor Authentication (MFA) and aggregate-failure monitoring." },
+            { front: "Heuristic / Behavioural Analysis", back: "Detecting malware by watching for suspicious activities or code structures, rather than matching known-bad file hashes." },
+            { front: "VirusTotal", back: "A free service that runs a suspicious file or hash through 70+ antimalware engines to check its global reputation." },
+            { front: "Nmap (Network Mapper)", back: "The world's most-used network scanner, utilized for inventorying local networks or performing reconnaissance." },
+            { front: "The hard ethical rule of network scanning", back: "Only scan networks or systems that you own or have explicit, written permission to scan." },
+            { front: "Ping Sweep (Nmap -sn)", back: "A scan that identifies which hosts are alive on a subnet without performing a full port scan." },
+            { front: "Nmap -sV flag", back: "Instructs Nmap to perform service and version detection on open ports." },
+            { front: "The three classic authentication factors", back: "Something you know (password), something you have (phone/hardware key), and something you are (biometrics)." },
+            { front: "Time-based One-Time Password (TOTP)", back: "An MFA code generated by an algorithm combining the current time and a shared base32 secret." },
+            { front: "Recommended Wi-Fi Security Protocol", back: "WPA3, falling back to WPA2-Personal AES-CCMP only for older clients." },
+            { front: "Best practice for guest Wi-Fi networks", back: "Place guests on a separate SSID and VLAN with client isolation enabled, restricting them to internet access only." },
+            { front: "The 'established' keyword in Cisco ACLs", back: "Matches incoming TCP packets with the ACK or RST bit set, allowing replies to connections the internal network started." },
+            { front: "The four-step troubleshooting methodology", back: "Gather (ask questions/read logs), Isolate (walk the OSI stack), Resolve (apply smallest fix), and Document (write the ticket)." },
+            { front: "Layer 3 OSI troubleshooting starting point", back: "Ping the default gateway. If it fails, the issue is on the local network; if it succeeds, the issue is further upstream." }
+        ];
+
+        const cardsWrapper = document.getElementById('cards-wrapper');
+        flashcardData.forEach(card => {
+            cardsWrapper.innerHTML += `
+                <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">${card.front}</div>
+                        <div class="flip-card-back">${card.back}</div>
+                    </div>
+                </div>
+            `;
+        });
+
+        // --- Quiz Data & Generation ---
+        const quizData = [
+            {
+                q: "A customer uses a mobile payment app at a supermarket. During the transaction, a malicious actor intercepts the network traffic and alters the payment amount from €15.00 to €150.00 before it reaches the bank's servers. Which core security property has been compromised?",
+                hint: "Consider whether the data was successfully hidden, whether it arrived reliably, or whether it remained unaltered during transit.",
+                options: [
+                    { text: "Confidentiality", correct: false },
+                    { text: "Integrity", correct: true },
+                    { text: "Availability", correct: false },
+                    { text: "Authentication", correct: false }
+                ],
+                rationale: "Integrity ensures data is unchanged in flight. Altering the payment amount directly violates this principle."
+            },
+            {
+                q: "An employee receives an SMS claiming their package is delayed and providing a link to 'http://correos-aduana-es.com'. Why should a network administrator classify this specific URL as highly suspicious?",
+                hint: "Analyze the domain name structure right before the top-level domain (.com) and compare it to the legitimate organization's known domain.",
+                options: [
+                    { text: "It utilizes a Punycode attack to substitute Cyrillic characters for Latin ones.", correct: false },
+                    { text: "It contains a raw IP address instead of a standard domain name.", correct: false },
+                    { text: "It uses a look-alike domain that mimics the brand but is registered under a different top-level structure.", correct: true },
+                    { text: "It relies on a volumetric protocol attack to overwhelm the device.", correct: false }
+                ],
+                rationale: "Attackers frequently register domains that contain the target brand name mixed with hyphens to bypass casual visual inspection by the user."
+            },
+            {
+                q: "A freelancer connects an infected laptop to a coworking space's flat Wi-Fi network. Within minutes, malicious software automatically scans the local subnet and copies itself onto the shared office NAS without any user interacting with a file. What classification best describes this malware?",
+                hint: "Focus on the mechanism of spread: did it require a human to click an attachment, or did it propagate autonomously over the network?",
+                options: [
+                    { text: "Virus", correct: false },
+                    { text: "Worm", correct: true },
+                    { text: "Trojan", correct: false },
+                    { text: "Ransomware", correct: false }
+                ],
+                rationale: "Worms are self-replicating software that spread across a network autonomously without needing a host file or user interaction."
+            },
+            {
+                q: "A small business utilizes an identity provider that locks user accounts after 5 failed login attempts. An attacker obtains a list of 40 employee emails and attempts the password 'Autumn2026!' against all 40 accounts exactly once. What is the most effective architectural defense against this specific attack pattern?",
+                hint: "The attacker is intentionally keeping the failure rate per user extremely low to fly under the radar of standard lockout policies.",
+                options: [
+                    { text: "Decreasing the account lockout threshold to 3 failed attempts.", correct: false },
+                    { text: "Forcing all 40 users to rotate their passwords every 30 days.", correct: false },
+                    { text: "Enforcing a policy that requires passwords to contain special characters and numbers.", correct: false },
+                    { text: "Implementing Multi-Factor Authentication and aggregate-failure monitoring.", correct: true }
+                ],
+                rationale: "Adding a second factor neutralizes the stolen password, while monitoring aggregate failures across the entire tenant detects the low-and-slow horizontal password spraying pattern."
+            },
+            {
+                q: "An Endpoint Detection and Response (EDR) agent blocks a brand-new, uncatalogued executable from running. The agent intervened because the executable attempted to rapidly modify registry keys and inject code into a running system process. Which detection mechanism triggered this response?",
+                hint: "The agent stopped the threat based on the actions the program was attempting to perform in real-time, rather than comparing it to a known list of bad files.",
+                options: [
+                    { text: "Signature scanning", correct: false },
+                    { text: "Cloud reputation lookup", correct: false },
+                    { text: "Behavioral analysis", correct: true },
+                    { text: "Network vulnerability scanning", correct: false }
+                ],
+                rationale: "Monitoring process execution for suspicious activities like rapid registry edits or code injection allows the engine to catch zero-day threats dynamically."
+            },
+            {
+                q: "A student living in an apartment complex discovers the landlord's shared router has an outdated administrative interface exposed on the Wi-Fi. The student decides to run an Nmap service scan against the router's IP to document the vulnerabilities and email a report to the landlord. From a professional ethics and legal standpoint, how should this action be categorized?",
+                hint: "Consider the strict boundary regarding authorization and system ownership before executing any reconnaissance tools.",
+                options: [
+                    { text: "It is a standard troubleshooting step acceptable for anyone connected to the local network.", correct: false },
+                    { text: "It is unauthorized access and potentially a criminal offense, regardless of the student's helpful intent.", correct: true },
+                    { text: "It is permissible because the student is only reading service banners and not exploiting the router.", correct: false },
+                    { text: "It is an ethical 'white hat' action since the student intends to privately disclose the findings.", correct: false }
+                ],
+                rationale: "Legal frameworks and professional ethics dictate that scanning systems without explicit, prior written permission from the owner is strictly prohibited."
+            },
+            {
+                q: "A small cafe wants to offer free Wi-Fi to customers but must ensure that connected guests cannot access the cafe's back-office server or payment terminals. Which network configuration provides the strongest architectural defense?",
+                hint: "Think about how to logically isolate traffic streams at the network boundary so devices cannot route packets to one another.",
+                options: [
+                    { text: "Hiding the guest SSID broadcast so only customers who ask for the name can connect.", correct: false },
+                    { text: "Using a 25-character WPA3 Pre-Shared Key for the internal office network.", correct: false },
+                    { text: "Placing the guest SSID on a dedicated VLAN configured with client isolation.", correct: true },
+                    { text: "Disabling Wi-Fi Protected Setup (WPS) on the router's management interface.", correct: false }
+                ],
+                rationale: "Logical segmentation (VLAN) prevents traffic from crossing into the business network, and client isolation prevents infected guest devices from attacking each other."
+            },
+            {
+                q: "A network administrator configures a Cisco router's WAN inbound Access Control List with the command `permit tcp any any established`. What specific traffic pattern does this line allow through the firewall?",
+                hint: "This rule relies on the firewall's ability to track the state of conversations that originated from inside the local network.",
+                options: [
+                    { text: "Incoming TCP packets that are returning as replies to connections initiated by internal hosts.", correct: true },
+                    { text: "All TCP traffic destined for established servers running on ports 80 and 443.", correct: false },
+                    { text: "New TCP SYN packets arriving from the internet to start a session with an internal server.", correct: false },
+                    { text: "Any inbound traffic originating from a previously trusted MAC address.", correct: false }
+                ],
+                rationale: "The 'established' keyword checks for ACK or RST bits, effectively allowing return traffic for outbound sessions while blocking unsolicited inbound attempts."
+            },
+            {
+                q: "An employee reports they cannot browse the internet. An IT technician successfully pings the local router (192.168.10.1) and successfully pings a public internet IP (8.8.8.8). However, attempting to load google.com in the browser fails. Following the OSI troubleshooting methodology, what is the next logical component to check?",
+                hint: "Since ICMP packets can reach the outside world using raw numbers, the failure occurs during the translation of human-readable text.",
+                options: [
+                    { text: "The physical Ethernet connection to the local switch.", correct: false },
+                    { text: "The client's Domain Name System (DNS) resolver settings.", correct: true },
+                    { text: "The DHCP scope configuration on the local router.", correct: false },
+                    { text: "The Network Address Translation (NAT) rules on the WAN interface.", correct: false }
+                ],
+                rationale: "Successful IP pings confirm Layers 1 through 3 are fully operational, isolating the failure to Layer 7 where hostnames are translated into IP addresses."
+            },
+            {
+                q: "During a network inventory, an Nmap scan reports that port 3389 (RDP) on a target host is in a 'filtered' state. What does this indicate about the network path to that specific port?",
+                hint: "Think about what happens to a packet when an intermediate security device silently drops it without sending an error message back to the scanner.",
+                options: [
+                    { text: "A firewall or other device is dropping the probe packets, preventing Nmap from determining if the port is open.", correct: true },
+                    { text: "The remote host's operating system actively rejected the connection by sending an RST packet.", correct: false },
+                    { text: "The service running on the port is currently processing maximum capacity and cannot accept new connections.", correct: false },
+                    { text: "The port is actively accepting connections but requires a specific authentication certificate.", correct: false }
+                ],
+                rationale: "When probes are blackholed without a response, the scanner cannot establish the port's true state, categorizing it as filtered (blocked by an intermediate control)."
+            }
+        ];
+
+        const quizWrapper = document.getElementById('quiz-wrapper');
+        quizData.forEach((qItem, index) => {
+            let optionsHtml = '';
+            qItem.options.forEach((opt, optIndex) => {
+                optionsHtml += `<div class="option" id="q${index}_opt${optIndex}" data-correct="${opt.correct}">${opt.text}</div>`;
+            });
+
+            quizWrapper.innerHTML += `
+                <div class="question-card">
+                    <h3>Question ${index + 1}</h3>
+                    <p><strong>${qItem.q}</strong></p>
+                    <p class="hint">Hint: ${qItem.hint}</p>
+                    <div class="options">
+                        ${optionsHtml}
+                    </div>
+                    <button class="reveal-btn" id="btn_${index}" onclick="revealAnswer(${index})">Check Answer</button>
+                    <div class="rationale-box" id="rat_${index}">
+                        <strong>Rationale:</strong> ${qItem.rationale}
+                    </div>
+                </div>
+            `;
+        });
+
+        function revealAnswer(questionIndex) {
+            // Disable button
+            document.getElementById(`btn_${questionIndex}`).style.display = 'none';
+            // Show rationale
+            document.getElementById(`rat_${questionIndex}`).style.display = 'block';
+            
+            // Highlight options
+            const options = document.querySelectorAll(`[id^='q${questionIndex}_opt']`);
+            options.forEach(opt => {
+                if (opt.getAttribute('data-correct') === 'true') {
+                    opt.classList.add('correct-answer');
+                } else {
+                    opt.classList.add('incorrect-answer');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+

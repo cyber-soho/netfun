@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 06 — Network Security | Cyber.SoHo Educational Hub</title>
+    
+    <!-- Chosen Palette: Warm Neutrals (Paper #FAF7F2, Dark Gray #3a3a3a) with Teal (#0E7C7B) and Rust Orange (#B5440C) accents based on the source's custom HTML snippets. -->
+    
+    <!-- Application Structure Plan: The SPA is structured as an interactive "Field Guide" dashboard. The report's linear lecture format is transformed into a non-linear, exploratory interface divided into four logical pillars: 1) Core Principles (CIA Triad), 2) Threat Landscape (Attacks), 3) Defense Toolbox (Antimalware, Firewalls, Wi-Fi), and 4) Operations (Troubleshooting). This structure was chosen to allow students to quickly jump between concepts, interact with the mini-tools (URL checker, password checker) embedded directly in the relevant sections, and view data visualizations in context, enhancing engagement and practical understanding compared to a static document. -->
+    
+    <!-- Visualization & Content Choices: 
+    1. CIA Triad -> Goal: Inform/Organize -> Viz: Interactive HTML/CSS buttons acting as a state machine -> Interaction: Toggling CIA components breaks/fixes the simulated Mercadona transaction -> Justification: Makes abstract concepts concrete through interactive state -> Library: Vanilla JS/DOM.
+    2. DDoS Attack Volume -> Goal: Compare -> Viz: Line Chart -> Interaction: Hover tooltips -> Justification: Visually demonstrates the extreme volumetric difference between legitimate traffic and a botnet attack (Real Madrid example) -> Library: Chart.js.
+    3. Phishing/Wi-Fi Checkers -> Goal: Inform/Apply -> Viz: Interactive forms with dynamic feedback blocks -> Interaction: Typing updates heuristic rules in real-time -> Justification: Turns code snippets from the text into usable mini-applications to reinforce learning -> Library: Vanilla JS/DOM.
+    4. Firewall Translator -> Goal: Compare -> Viz: Dynamic code blocks -> Interaction: Dropdown selector changes syntax -> Justification: Shows how the same logical rule applies across Cisco, iptables, and Windows -> Library: Vanilla JS/DOM.
+    Confirming NO SVG/Mermaid used.
+    -->
+    
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#FAF7F2',
+                        ink: '#3a3a3a',
+                        teal: {
+                            DEFAULT: '#0E7C7B',
+                            light: '#e6f4f1'
+                        },
+                        rust: {
+                            DEFAULT: '#B5440C',
+                            light: '#fff3e6'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['Georgia', 'serif'],
+                        sans: ['Helvetica', 'Arial', 'sans-serif'],
+                        mono: ['Courier New', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #FAF7F2;
+            color: #3a3a3a;
+        }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 40vh;
+            max-height: 400px;
+        }
+        
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        .nav-item.active {
+            background-color: #0E7C7B;
+            color: #FAF7F2;
+            font-weight: bold;
+        }
+        
+        .tab-item.active {
+            border-bottom: 4px solid #0E7C7B;
+            color: #0E7C7B;
+            font-weight: bold;
+        }
+        
+        .cia-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .cia-btn.active {
+            background-color: #0E7C7B;
+            color: white;
+            border-color: #0E7C7B;
+        }
+        
+        .cia-btn.inactive {
+            background-color: #B5440C;
+            color: white;
+            border-color: #B5440C;
+            opacity: 0.8;
+        }
+
+        .code-block {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #FAF7F2; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #0E7C7B; 
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="font-serif antialiased custom-scrollbar flex flex-col min-h-screen">
+
+    <header class="bg-ink text-paper p-6 shadow-md z-10">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold tracking-wide text-teal-light">Cyber.SoHo</h1>
+                <p class="text-sm mt-1 opacity-80 font-sans">Day 06 — Network Security Field Guide</p>
+            </div>
+            <div class="mt-4 md:mt-0 text-right font-sans text-xs">
+                <p>Course: Basics of Computer Networks</p>
+                <p class="italic text-teal-light">"From the Industry to the Classroom"</p>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex-grow flex flex-col md:flex-row max-w-7xl mx-auto w-full">
+        
+        <nav class="w-full md:w-64 bg-paper border-b md:border-b-0 md:border-r border-gray-300 p-4 font-sans shrink-0 sticky top-0 md:h-[calc(100vh-88px)] overflow-y-auto custom-scrollbar">
+            <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Modules</h2>
+            <ul class="space-y-2">
+                <li><button onclick="nav('principles')" id="nav-principles" class="nav-item active w-full text-left px-4 py-3 rounded-md transition-colors hover:bg-teal-light hover:text-teal">1. Core Principles</button></li>
+                <li><button onclick="nav('threats')" id="nav-threats" class="nav-item w-full text-left px-4 py-3 rounded-md transition-colors hover:bg-teal-light hover:text-teal">2. Threat Landscape</button></li>
+                <li><button onclick="nav('defense')" id="nav-defense" class="nav-item w-full text-left px-4 py-3 rounded-md transition-colors hover:bg-teal-light hover:text-teal">3. Defense Toolbox</button></li>
+                <li><button onclick="nav('ops')" id="nav-ops" class="nav-item w-full text-left px-4 py-3 rounded-md transition-colors hover:bg-teal-light hover:text-teal">4. Operations & T-Shoot</button></li>
+            </ul>
+            
+            <div class="mt-12 p-4 bg-teal-light rounded-md text-sm border border-teal">
+                <p class="font-bold text-teal mb-2">&#9888; Ethics Rule</p>
+                <p class="leading-tight text-ink">Only scan what you own (or are paid to scan). Scanning unauthorised networks is a criminal offence under Ley Org&aacute;nica 10/1995.</p>
+            </div>
+        </nav>
+
+        <main class="flex-grow p-6 md:p-10 overflow-y-auto">
+            
+            <section id="sec-principles" class="block">
+                <h2 class="text-4xl font-bold text-teal mb-6">The CIA Triad</h2>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+                    <p class="text-lg leading-relaxed mb-4">
+                        This section explores the fundamental framework of all security decisions: Confidentiality, Integrity, and Availability. The interactive model below demonstrates how these three properties must work in tandem using a real-world scenario from the course material. If a control does not protect at least one of these, it is merely decoration.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-4">Interactive Scenario: The Mercadona Receipt</h3>
+                        <p class="mb-4">You pay with your phone at a Mercadona supermarket. Toggle the buttons below to break specific security properties and observe the system's failure state.</p>
+                        
+                        <div class="flex flex-col space-y-4 font-sans mb-8">
+                            <button id="btn-c" onclick="toggleCIA('c')" class="cia-btn active border-2 px-6 py-4 rounded-lg text-left shadow-sm flex items-center justify-between">
+                                <div>
+                                    <span class="font-bold text-xl block">Confidentiality</span>
+                                    <span class="text-sm font-normal">Only the right eyes see the data.</span>
+                                </div>
+                                <span id="icon-c" class="text-2xl">&#10003;</span>
+                            </button>
+                            <button id="btn-i" onclick="toggleCIA('i')" class="cia-btn active border-2 px-6 py-4 rounded-lg text-left shadow-sm flex items-center justify-between">
+                                <div>
+                                    <span class="font-bold text-xl block">Integrity</span>
+                                    <span class="text-sm font-normal">Data is unchanged in flight.</span>
+                                </div>
+                                <span id="icon-i" class="text-2xl">&#10003;</span>
+                            </button>
+                            <button id="btn-a" onclick="toggleCIA('a')" class="cia-btn active border-2 px-6 py-4 rounded-lg text-left shadow-sm flex items-center justify-between">
+                                <div>
+                                    <span class="font-bold text-xl block">Availability</span>
+                                    <span class="text-sm font-normal">Service is there when asked.</span>
+                                </div>
+                                <span id="icon-a" class="text-2xl">&#10003;</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-100 p-6 rounded-lg border border-gray-300 font-mono text-sm relative">
+                        <div class="absolute top-0 right-0 bg-gray-300 text-gray-700 px-3 py-1 text-xs rounded-bl-lg">System Log</div>
+                        <h4 class="font-bold text-lg mb-4 text-ink font-sans">Transaction State</h4>
+                        
+                        <div id="log-normal" class="block space-y-2">
+                            <p class="text-green-700">&#10003; Card Token: tok_4xZ9-NEVER-PAN</p>
+                            <p class="text-green-700">&#10003; Amount: &euro;23.45 (Hash: e3b0c44298fc1c14...)</p>
+                            <p class="text-green-700">&#10003; Gateway Ping: 12ms (Online)</p>
+                            <div class="mt-4 p-3 bg-teal-light text-teal border border-teal rounded font-sans">
+                                <strong>Status: Transaction Successful.</strong> All three properties enforced at once.
+                            </div>
+                        </div>
+
+                        <div id="log-c-fail" class="hidden space-y-2">
+                            <p class="text-rust font-bold">&#10007; DATA LEAK DETECTED</p>
+                            <p>Attacker captures cleartext bytes.</p>
+                            <p>Exposed PAN: 4532 1123 9982 1024</p>
+                            <div class="mt-4 p-3 bg-rust-light text-rust border border-rust rounded font-sans">
+                                <strong>Status: Confidentiality Broken.</strong> The transaction completes, but the card number is stolen by a local Wi-Fi sniffer.
+                            </div>
+                        </div>
+
+                        <div id="log-i-fail" class="hidden space-y-2">
+                            <p class="text-rust font-bold">&#10007; TAMPERING DETECTED</p>
+                            <p>Amount in transit: &euro;2345.00</p>
+                            <p>Hash mismatch! Expected: e3b0c4... Got: 8f4e2a...</p>
+                            <div class="mt-4 p-3 bg-rust-light text-rust border border-rust rounded font-sans">
+                                <strong>Status: Integrity Broken.</strong> An attacker flipped a bit on the wire. The transaction is rejected by the bank because the cryptographic signature fails.
+                            </div>
+                        </div>
+
+                        <div id="log-a-fail" class="hidden space-y-2">
+                            <p class="text-rust font-bold">&#10007; TIMEOUT</p>
+                            <p>Gateway Ping: Request Timed Out</p>
+                            <p>Backup 4G Modem: Offline</p>
+                            <div class="mt-4 p-3 bg-rust-light text-rust border border-rust rounded font-sans">
+                                <strong>Status: Availability Broken.</strong> The data is safe and untampered, but the terminal cannot reach the bank at 7 PM. The sale is lost.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="sec-threats" class="hidden">
+                <h2 class="text-4xl font-bold text-teal mb-6">The Threat Catalog</h2>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+                    <p class="text-lg leading-relaxed mb-4">
+                        Real attacks rarely resemble cinematic hacking. They are mechanical, exploiting the same human and systemic vulnerabilities repeatedly. This section breaks down the four primary threat vectors discussed in the report, providing interactive demonstrations of how attackers operate and how defenders detect them.
+                    </p>
+                </div>
+
+                <div class="flex border-b border-gray-300 font-sans mb-6 overflow-x-auto custom-scrollbar">
+                    <button onclick="switchTab('threat-soceng')" id="tab-threat-soceng" class="tab-item active px-6 py-3 whitespace-nowrap">Social Engineering</button>
+                    <button onclick="switchTab('threat-ddos')" id="tab-threat-ddos" class="tab-item px-6 py-3 whitespace-nowrap text-gray-500 hover:text-teal">DoS & DDoS</button>
+                    <button onclick="switchTab('threat-auth')" id="tab-threat-auth" class="tab-item px-6 py-3 whitespace-nowrap text-gray-500 hover:text-teal">Auth Attacks</button>
+                    <button onclick="switchTab('threat-malware')" id="tab-threat-malware" class="tab-item px-6 py-3 whitespace-nowrap text-gray-500 hover:text-teal">Malware</button>
+                </div>
+
+                <div id="threat-soceng" class="block">
+                    <h3 class="text-2xl font-bold mb-4">Phishing, Vishing, and Smishing</h3>
+                    <p class="mb-6">The attacker convinces a human to open the door from the inside. Urgency disables the part of the brain that checks domain names.</p>
+                    
+                    <div class="bg-paper border-2 border-teal p-6 rounded-lg mb-8 max-w-2xl">
+                        <h4 class="font-sans font-bold text-teal mb-2">Interactive Tool: Smishing URL Checker</h4>
+                        <p class="text-sm mb-4">Paste a suspicious URL (like the fake Correos link from the lecture) to run client-side heuristic checks.</p>
+                        
+                        <input type="text" id="urlInput" placeholder="e.g., https://correos-aduana-es.com/pago" class="w-full p-3 font-mono border-2 border-gray-300 rounded mb-3 focus:border-teal outline-none" oninput="checkUrl()">
+                        
+                        <div id="urlResults" class="font-sans space-y-2 mt-4">
+                            <div class="p-3 bg-gray-100 border-l-4 border-gray-400 text-gray-600">Enter a URL to begin analysis.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="threat-ddos" class="hidden">
+                    <h3 class="text-2xl font-bold mb-4">Volumetric DDoS Attack</h3>
+                    <p class="mb-6">A Distributed Denial of Service exhausts resources. In the <em>Real Madrid Champions League</em> example, the pipe is clogged by a botnet before packets even reach the local firewall. Mitigation must happen upstream at a scrubbing center.</p>
+                    
+                    <div class="chart-container bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                        <canvas id="ddosChart"></canvas>
+                    </div>
+                    <p class="text-sm text-center text-gray-500 mt-2">Figure 1: Requests per second leading up to minute 90.</p>
+                </div>
+
+                <div id="threat-auth" class="hidden">
+                    <h3 class="text-2xl font-bold mb-4">Brute Force vs. Password Spraying</h3>
+                    <p class="mb-6">Defending authentication requires understanding the attack pattern. The <em>Malasa&ntilde;a coworking incident</em> proved that simple account lockouts fail against horizontal spraying.</p>
+                    
+                    <div class="overflow-x-auto font-sans">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-teal text-white">
+                                    <th class="p-3">Property</th>
+                                    <th class="p-3">Brute Force</th>
+                                    <th class="p-3">Password Spraying</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white">
+                                <tr class="border-b">
+                                    <td class="p-3 font-bold">Strategy</td>
+                                    <td class="p-3">Many passwords vs ONE account</td>
+                                    <td class="p-3">ONE password vs MANY accounts</td>
+                                </tr>
+                                <tr class="border-b bg-gray-50">
+                                    <td class="p-3 font-bold">Noise Level</td>
+                                    <td class="p-3">High (single-account spikes)</td>
+                                    <td class="p-3">Low (each account looks normal)</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <td class="p-3 font-bold">Defeated By</td>
+                                    <td class="p-3">Account lockout, rate limits</td>
+                                    <td class="p-3">Aggregate monitoring, MFA</td>
+                                </tr>
+                                <tr class="bg-gray-50">
+                                    <td class="p-3 font-bold">Detection Signal</td>
+                                    <td class="p-3 text-rust font-mono text-sm">Failed login count PER USER</td>
+                                    <td class="p-3 text-teal font-mono text-sm">Failed login count PER PASSWORD</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="threat-malware" class="hidden">
+                    <h3 class="text-2xl font-bold mb-4">Malware Family Tree</h3>
+                    <p class="mb-6">Understanding the distinction between payload types is crucial for endpoint defense. Example: The fake BiciMAD APK is a Trojan, not a Virus.</p>
+                    
+                    <div class="flex flex-col md:flex-row gap-4 font-sans">
+                        <div class="flex-1 bg-white border-l-4 border-teal p-4 shadow-sm">
+                            <h4 class="font-bold text-lg mb-1">Virus</h4>
+                            <p class="text-sm text-gray-600">Needs a host file. Spreads when host is opened.</p>
+                        </div>
+                        <div class="flex-1 bg-white border-l-4 border-teal p-4 shadow-sm">
+                            <h4 class="font-bold text-lg mb-1">Worm</h4>
+                            <p class="text-sm text-gray-600">Self-replicating. Spreads across network (e.g., WannaCry).</p>
+                        </div>
+                        <div class="flex-1 bg-white border-l-4 border-rust p-4 shadow-sm">
+                            <h4 class="font-bold text-lg mb-1">Trojan</h4>
+                            <p class="text-sm text-gray-600">Disguised payload. User willingly installs it.</p>
+                        </div>
+                        <div class="flex-1 bg-white border-l-4 border-ink p-4 shadow-sm">
+                            <h4 class="font-bold text-lg mb-1">Ransomware</h4>
+                            <p class="text-sm text-gray-600">Encrypts files, demands payment. Double extortion.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <section id="sec-defense" class="hidden">
+                <h2 class="text-4xl font-bold text-teal mb-6">Defense Toolbox</h2>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+                    <p class="text-lg leading-relaxed mb-4">
+                        This section provides practical configurations and tools for securing a network. From understanding how antimalware engines score files, to evaluating Wi-Fi passwords and translating abstract firewall intent into vendor-specific syntax, these are the daily mechanics of network administration.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-4">Wi-Fi Hardening</h3>
+                        <p class="mb-4">A Small Office/Home Office (SoHo) needs segmented VLANs and strong Pre-Shared Keys (PSK). Hide the SSID? Deters nothing. WPS? Disable it.</p>
+                        
+                        <div class="bg-white p-6 rounded-lg border border-gray-300 font-sans shadow-sm">
+                            <h4 class="font-bold text-teal mb-2">Interactive Tool: PSK Strength Check</h4>
+                            <p class="text-sm text-gray-600 mb-4">Tests length and complexity based on Wi-Fi Alliance guidance.</p>
+                            <input type="text" id="pskInput" placeholder="Enter candidate Wi-Fi passphrase..." class="w-full p-3 font-mono border-2 border-gray-300 rounded focus:border-teal outline-none" oninput="checkPsk()">
+                            <div class="h-4 border border-gray-400 mt-4 rounded overflow-hidden bg-gray-100">
+                                <div id="pskBar" class="h-full w-0 transition-all duration-300 bg-rust"></div>
+                            </div>
+                            <div id="pskFeedback" class="mt-4 space-y-2"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-2xl font-bold mb-4">Modern EDR Stack</h3>
+                        <p class="mb-4">How an endpoint agent decides "is this thing bad?" The <em>Lavapi&eacute;s cybercaf&eacute;</em> USB example proves why checking hashes against cloud reputation saves networks.</p>
+                        <div class="space-y-3 font-sans">
+                            <div class="flex items-start">
+                                <span class="bg-teal text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 mr-3">1</span>
+                                <div><strong class="text-ink">Signatures:</strong> Match known-bad hashes (useless on zero-day).</div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="bg-teal text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 mr-3">2</span>
+                                <div><strong class="text-ink">Heuristics:</strong> Score suspicious code structures natively.</div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="bg-teal text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 mr-3">3</span>
+                                <div><strong class="text-ink">Behavior:</strong> Watch process execution (registry edits, rapid encryption).</div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="bg-teal text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 mr-3">4</span>
+                                <div><strong class="text-ink">Cloud Reputation:</strong> Has this hash been seen globally?</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-300 pt-8">
+                    <h3 class="text-2xl font-bold mb-4">Firewall Rule Translator</h3>
+                    <p class="mb-6">Intent: <em>"Allow established traffic back in, allow ICMP echo-reply, deny all other unsolicited inbound from the internet."</em> Select a vendor to see the syntax.</p>
+                    
+                    <div class="bg-ink rounded-lg overflow-hidden shadow-lg">
+                        <div class="flex bg-gray-800 p-2 font-sans text-sm">
+                            <button onclick="setFw('cisco')" id="fw-cisco" class="px-4 py-2 bg-gray-600 text-white rounded mr-2">Cisco IOS</button>
+                            <button onclick="setFw('iptables')" id="fw-iptables" class="px-4 py-2 text-gray-400 hover:text-white rounded mr-2">iptables (Linux)</button>
+                            <button onclick="setFw('ps')" id="fw-ps" class="px-4 py-2 text-gray-400 hover:text-white rounded">PowerShell (Win)</button>
+                        </div>
+                        <div class="p-6 overflow-x-auto custom-scrollbar">
+<pre id="fw-code" class="text-green-400 font-mono text-sm leading-relaxed">
+! Name the access-list
+ip access-list extended FROM-INTERNET
+ ! Allow TCP replies to connections we started
+ permit tcp any any established
+ ! Allow ICMP echo-replies so ping from inside works
+ permit icmp any any echo-reply
+ ! Deny everything else and LOG
+ deny ip any any log
+exit
+
+! Apply inbound on the WAN interface
+interface GigabitEthernet0/0
+ ip access-group FROM-INTERNET in
+</pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="sec-ops" class="hidden">
+                <h2 class="text-4xl font-bold text-teal mb-6">Operations & Troubleshooting</h2>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+                    <p class="text-lg leading-relaxed mb-4">
+                        The fastest troubleshooters follow a disciplined rhythm, walking down the OSI stack rather than guessing. This section outlines the methodology for isolating network failures and summarizes the final deliverables for the Cyber.SoHo Network Build Challenge.
+                    </p>
+                </div>
+
+                <h3 class="text-2xl font-bold mb-6">The Troubleshooting Funnel</h3>
+                
+                <div class="space-y-4 font-sans mb-12 max-w-3xl">
+                    <div class="border-l-4 border-teal pl-6 py-2 relative">
+                        <div class="absolute w-4 h-4 bg-teal rounded-full -left-[10px] top-4"></div>
+                        <h4 class="font-bold text-xl text-ink">1. GATHER</h4>
+                        <p class="text-gray-600 mt-1">Ask exactly what happened. When did it start? What changed? Read the logs.</p>
+                    </div>
+                    <div class="border-l-4 border-teal pl-6 py-2 relative ml-4">
+                        <div class="absolute w-4 h-4 bg-teal rounded-full -left-[10px] top-4"></div>
+                        <h4 class="font-bold text-xl text-ink">2. ISOLATE</h4>
+                        <p class="text-gray-600 mt-1">Walk the OSI layers. L1 (cable)? L2 (link light)? L3 (ping gateway)? L4 (TCP connect)? Each "yes" eliminates a layer.</p>
+                    </div>
+                    <div class="border-l-4 border-rust pl-6 py-2 relative ml-8">
+                        <div class="absolute w-4 h-4 bg-rust rounded-full -left-[10px] top-4"></div>
+                        <h4 class="font-bold text-xl text-ink">3. RESOLVE</h4>
+                        <p class="text-gray-600 mt-1">Apply the smallest fix. Reboot the smallest possible thing. Have a rollback plan.</p>
+                    </div>
+                    <div class="border-l-4 border-ink pl-6 py-2 relative ml-12">
+                        <div class="absolute w-4 h-4 bg-ink rounded-full -left-[10px] top-4"></div>
+                        <h4 class="font-bold text-xl text-ink">4. DOCUMENT</h4>
+                        <p class="text-gray-600 mt-1">Write the ticket. What was reported, what was found, what was changed. Future-you will be grateful.</p>
+                    </div>
+                </div>
+
+                <h3 class="text-2xl font-bold mb-4">Final Project Scope: What "Done" Looks Like</h3>
+                <div class="bg-white rounded-lg border border-gray-300 p-6 shadow-sm font-sans">
+                    <ul class="space-y-3">
+                        <li class="flex items-center"><span class="text-green-600 text-xl mr-3">&#10003;</span> Two LAN segments (built Day 3)</li>
+                        <li class="flex items-center"><span class="text-green-600 text-xl mr-3">&#10003;</span> Working DHCP scope & static server IP (built Day 4)</li>
+                        <li class="flex items-center"><span class="text-green-600 text-xl mr-3">&#10003;</span> Internal DNS + HTTP service (built Day 5)</li>
+                        <li class="flex items-center"><span class="text-green-600 text-xl mr-3">&#10003;</span> Wi-Fi access segment / Cloud node (built Day 5)</li>
+                        <li class="flex items-center"><span class="text-rust text-xl mr-3 font-bold">&#10003;</span> WAN-facing Firewall ACL (applied Day 6)</li>
+                    </ul>
+                    <div class="mt-6 p-4 bg-gray-100 rounded text-sm border border-gray-200">
+                        <strong>Deliverables:</strong> <code class="bg-white px-1 py-0.5 rounded text-rust">topology.png</code>, <code class="bg-white px-1 py-0.5 rounded text-rust">ip_plan.csv</code>, <code class="bg-white px-1 py-0.5 rounded text-rust">firewall_rules.txt</code>, <code class="bg-white px-1 py-0.5 rounded text-rust">nmap_inventory.txt</code>, and a 1-page <code class="bg-white px-1 py-0.5 rounded text-rust">README.md</code> documentation.
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="bg-ink text-gray-400 p-6 mt-auto font-sans text-xs text-center border-t-4 border-teal">
+        <p>&copy; 2026 Cyber.SoHo Educational Hub. All Rights Reserved.</p>
+        <p class="mt-2">Educational purposes only. No institutional affiliation with Cisco, Microsoft, etc. Verify tools via VirusTotal.</p>
+    </footer>
+
+    <script>
+        function nav(sectionId) {
+            document.querySelectorAll('section').forEach(sec => {
+                sec.classList.remove('block');
+                sec.classList.add('hidden');
+            });
+            document.getElementById('sec-' + sectionId).classList.remove('hidden');
+            document.getElementById('sec-' + sectionId).classList.add('block');
+            
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.remove('active', 'bg-teal', 'text-paper', 'font-bold');
+            });
+            const activeBtn = document.getElementById('nav-' + sectionId);
+            activeBtn.classList.add('active');
+            
+            if (sectionId === 'threats' && !window.chartInitialized) {
+                initChart();
+                window.chartInitialized = true;
+            }
+        }
+
+        const ciaState = { c: true, i: true, a: true };
+        
+        function toggleCIA(prop) {
+            ciaState[prop] = !ciaState[prop];
+            const btn = document.getElementById('btn-' + prop);
+            const icon = document.getElementById('icon-' + prop);
+            
+            if (ciaState[prop]) {
+                btn.classList.remove('inactive');
+                btn.classList.add('active');
+                icon.innerHTML = '&#10003;';
+            } else {
+                btn.classList.remove('active');
+                btn.classList.add('inactive');
+                icon.innerHTML = '&#10007;';
+            }
+            
+            updateCiaLog();
+        }
+
+        function updateCiaLog() {
+            document.getElementById('log-normal').classList.add('hidden');
+            document.getElementById('log-c-fail').classList.add('hidden');
+            document.getElementById('log-i-fail').classList.add('hidden');
+            document.getElementById('log-a-fail').classList.add('hidden');
+
+            if (!ciaState.a) {
+                document.getElementById('log-a-fail').classList.remove('hidden');
+            } else if (!ciaState.i) {
+                document.getElementById('log-i-fail').classList.remove('hidden');
+            } else if (!ciaState.c) {
+                document.getElementById('log-c-fail').classList.remove('hidden');
+            } else {
+                document.getElementById('log-normal').classList.remove('hidden');
+            }
+        }
+
+        function switchTab(tabId) {
+            document.getElementById('threat-soceng').classList.add('hidden');
+            document.getElementById('threat-ddos').classList.add('hidden');
+            document.getElementById('threat-auth').classList.add('hidden');
+            document.getElementById('threat-malware').classList.add('hidden');
+            
+            document.querySelectorAll('.tab-item').forEach(t => {
+                t.classList.remove('active', 'border-b', 'border-teal', 'text-teal');
+                t.classList.add('text-gray-500');
+            });
+            
+            document.getElementById(tabId).classList.remove('hidden');
+            const activeTab = document.getElementById('tab-' + tabId);
+            activeTab.classList.add('active');
+            activeTab.classList.remove('text-gray-500');
+        }
+
+        function checkUrl() {
+            const url = document.getElementById('urlInput').value.trim();
+            const res = document.getElementById('urlResults');
+            res.innerHTML = '';
+            
+            if (!url) {
+                res.innerHTML = '<div class="p-3 bg-gray-100 border-l-4 border-gray-400 text-gray-600">Enter a URL to begin analysis.</div>';
+                return;
+            }
+            
+            let flags = 0;
+            
+            if (url.startsWith('http://')) {
+                addFlag(res, 'Warning: Uses plain HTTP (unencrypted connection).', 'rust');
+                flags++;
+            }
+            if (/(correos|banco|secure).*\-.*\.com/i.test(url)) {
+                addFlag(res, 'Heuristic Match: Brand name mixed with hyphens in a non-standard TLD (look-alike domain).', 'rust');
+                flags++;
+            }
+            if (/([0-9]{1,3}\.){3}[0-9]{1,3}/.test(url)) {
+                addFlag(res, 'Warning: URL uses a raw IP address instead of a domain name.', 'rust');
+                flags++;
+            }
+            
+            if (flags === 0) {
+                addFlag(res, 'No obvious heuristic flags detected. Remember: Manual verification is still required.', 'teal');
+            }
+        }
+        
+        function addFlag(container, text, color) {
+            const div = document.createElement('div');
+            const bgColor = color === 'rust' ? 'bg-rust-light' : 'bg-teal-light';
+            const borderColor = color === 'rust' ? 'border-rust' : 'border-teal';
+            const textColor = color === 'rust' ? 'text-rust' : 'text-teal';
+            div.className = `p-3 ${bgColor} border-l-4 ${borderColor} ${textColor} text-sm`;
+            div.textContent = text;
+            container.appendChild(div);
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('ddosChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['T-5', 'T-4', 'T-3', 'T-2', 'T-1', 'Minute 90 Drop'],
+                    datasets: [
+                        {
+                            label: 'Normal Fans (Req/s)',
+                            data: [4500, 4800, 5000, 4900, 5100, 5000],
+                            borderColor: '#0E7C7B',
+                            backgroundColor: 'rgba(14, 124, 123, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Botnet Attack (Req/s)',
+                            data: [100, 50, 150, 200, 100, 1200000],
+                            borderColor: '#B5440C',
+                            backgroundColor: 'rgba(181, 68, 12, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'logarithmic',
+                            title: { display: true, text: 'Requests per Second (Log Scale)' }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed.y !== null) {
+                                        label += new Intl.NumberFormat('en-US').format(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function checkPsk() {
+            const val = document.getElementById('pskInput').value;
+            let score = 0;
+            const fb = document.getElementById('pskFeedback');
+            fb.innerHTML = '';
+            
+            if (!val) {
+                document.getElementById('pskBar').style.width = '0%';
+                return;
+            }
+
+            if (val.length >= 20) {
+                score += 50;
+                addFlag(fb, 'Length >= 20 characters (Wi-Fi Alliance Recommended)', 'teal');
+            } else if (val.length >= 12) {
+                score += 25;
+                addFlag(fb, 'Length is okay, but >= 20 is recommended for WPA2/3.', 'rust');
+            } else {
+                addFlag(fb, 'Too short. Extremely vulnerable to offline cracking.', 'rust');
+            }
+
+            if (/[A-Z]/.test(val) && /[a-z]/.test(val) && /[0-9]/.test(val)) {
+                score += 30;
+                addFlag(fb, 'Good character diversity.', 'teal');
+            } else {
+                addFlag(fb, 'Add mixed casing and numbers.', 'rust');
+            }
+            
+            if (/[^A-Za-z0-9]/.test(val)) {
+                score += 20;
+            }
+
+            const badList = ['password', '123456', 'qwerty', 'admin', 'madrid2026', 'spring2026'];
+            if (badList.some(b => val.toLowerCase().includes(b))) {
+                score = Math.max(10, score - 50);
+                addFlag(fb, 'CRITICAL: Contains common dictionary pattern.', 'rust');
+            }
+
+            const bar = document.getElementById('pskBar');
+            bar.style.width = Math.min(score, 100) + '%';
+            
+            if (score > 75) {
+                bar.className = 'h-full transition-all duration-300 bg-teal';
+            } else {
+                bar.className = 'h-full transition-all duration-300 bg-rust';
+            }
+        }
+
+        const fwConfigs = {
+            cisco: `! Name the access-list
+ip access-list extended FROM-INTERNET
+ ! Allow TCP replies to connections we started
+ permit tcp any any established
+ ! Allow ICMP echo-replies so ping from inside works
+ permit icmp any any echo-reply
+ ! Deny everything else and LOG
+ deny ip any any log
+exit
+
+! Apply inbound on the WAN interface
+interface GigabitEthernet0/0
+ ip access-group FROM-INTERNET in`,
+            
+            iptables: `# Flush existing rules
+iptables -F
+# Set default drop policy for inbound
+iptables -P INPUT DROP
+# Allow established/related traffic
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+# Allow ICMP echo-reply specifically
+iptables -A INPUT -p icmp --icmp-type echo-reply -j ACCEPT
+# Log dropped packets (limit to avoid flood)
+iptables -A INPUT -j LOG --log-prefix "FW_DROP: "`,
+
+            ps: `# Windows Server Advanced Firewall
+# Allow established is implicit in stateful firewalls.
+# Allow ICMP echo-reply
+New-NetFirewallRule -DisplayName "Allow Echo Reply" \`
+                    -Direction Inbound -Protocol ICMPv4 \`
+                    -IcmpType 0 -Action Allow
+
+# Block unsolicited inbound is the default profile state.
+Set-NetFirewallProfile -Profile Domain,Public,Private \`
+                       -DefaultInboundAction Block`
+        };
+
+        function setFw(vendor) {
+            document.getElementById('fw-cisco').className = 'px-4 py-2 text-gray-400 hover:text-white rounded mr-2';
+            document.getElementById('fw-iptables').className = 'px-4 py-2 text-gray-400 hover:text-white rounded mr-2';
+            document.getElementById('fw-ps').className = 'px-4 py-2 text-gray-400 hover:text-white rounded';
+            
+            document.getElementById('fw-' + vendor).className = 'px-4 py-2 bg-gray-600 text-white rounded mr-2';
+            document.getElementById('fw-code').textContent = fwConfigs[vendor];
+        }
+
+    </script>
+</body>
+</html>
+
+
