@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber.SoHo Educational Hub - Network Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Chosen Palette: Warm Neutrals & Deep Teal -->
+    <!-- Application Structure Plan: The application uses a dashboard layout with three main thematic tabs: "Architecture", "Lab 1: Nmap", and "Lab 2: Firewall". This structure was chosen because the source report represents a sequential classroom lab exercise. Transforming it into a tabbed dashboard allows students to keep the reference material (Architecture) easily accessible while interactively stepping through the active exercises (Labs). The "Wow" factors include a simulated terminal for Nmap commands and an interactive Access Control List (ACL) explainer. -->
+    <!-- Visualization & Content Choices: 
+         1. Network Diagram -> HTML/CSS Flexbox -> Goal: Organize/Inform -> Justification: Shows logical separation without relying on external SVGs. Library: Tailwind. 
+         2. Nmap Packet Volume -> Bar Chart -> Goal: Compare -> Justification: Visually reinforces the text's note about how different flags impact network traffic (stealth vs loud). Library: Chart.js.
+         3. Scan Execution -> Interactive Mock Terminal -> Goal: Inform/Change -> Justification: Allows safe, simulated execution of the commands taught in the text. Library: Vanilla JS.
+         4. Firewall Rules -> Interactive Code Block -> Goal: Inform/Organize -> Justification: Breaks down complex ACL syntax line-by-line for easier comprehension. Library: Vanilla JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .terminal-bg { background-color: #1e1e1e; }
+        .terminal-text { color: #4ade80; font-family: monospace; }
+        .tab-active { border-bottom: 4px solid #0d9488; color: #0f766e; font-weight: 600; }
+        .tab-inactive { border-bottom: 4px solid transparent; color: #64748b; }
+        .tab-inactive:hover { color: #334155; border-bottom: 4px solid #cbd5e1; }
+        .acl-line:hover { background-color: #f1f5f9; cursor: pointer; border-left: 4px solid #0d9488; }
+        .acl-line-active { background-color: #e0f2fe; border-left: 4px solid #0284c7; font-weight: bold; }
+    </style>
+</head>
+<body class="bg-stone-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <header class="bg-white border-b border-stone-200 shadow-sm sticky top-0 z-10">
+        <div class="max-w-6xl mx-auto px-4 py-6">
+            <h1 class="text-3xl font-bold text-slate-900">Cyber.SoHo Educational Hub</h1>
+            <p class="text-sm text-teal-700 mt-1 italic">From the Industry to the Classroom — Building the IT's Future, Today and Together!</p>
+            <h2 class="text-xl font-semibold text-slate-600 mt-4">Network Build Challenge — Final Submission</h2>
+        </div>
+        <nav class="max-w-6xl mx-auto px-4 flex gap-6 overflow-x-auto">
+            <button onclick="switchTab('arch')" id="tab-btn-arch" class="tab-active pb-3 px-2 transition-colors whitespace-nowrap">1. Target Architecture</button>
+            <button onclick="switchTab('lab1')" id="tab-btn-lab1" class="tab-inactive pb-3 px-2 transition-colors whitespace-nowrap">2. Day 06: Nmap Lab</button>
+            <button onclick="switchTab('lab2')" id="tab-btn-lab2" class="tab-inactive pb-3 px-2 transition-colors whitespace-nowrap">3. Day 06: Firewall Integration</button>
+        </nav>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8 flex-grow w-full">
+
+        <section id="tab-arch" class="block animate-fade-in">
+            <div class="mb-8">
+                <h3 class="text-2xl font-bold text-slate-800 mb-2">Acme SoHo Consulting — Office Network</h3>
+                <p class="text-slate-600 leading-relaxed">
+                    This section outlines the baseline topology, IP plan, and internal services for the target environment. Review this architecture carefully; it serves as the foundation for the scanning and firewall configuration exercises in the subsequent labs.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <h4 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Logical Topology Map</h4>
+                    
+                    <div class="flex flex-col items-center gap-4 py-4">
+                        <div class="bg-slate-200 px-6 py-2 rounded-full border-2 border-slate-300 text-sm font-bold text-slate-600 text-center w-48">Internet (WAN)</div>
+                        <div class="text-slate-400 font-bold">&#8595; G0/0 (ACL Applied)</div>
+                        <div class="bg-teal-600 text-white px-8 py-4 rounded-lg shadow-md font-bold text-center w-64">
+                            Cisco Router<br>
+                            <span class="text-xs font-normal text-teal-100">Inter-VLAN Routing & NAT</span>
+                        </div>
+                        <div class="flex flex-wrap justify-center gap-6 mt-4 w-full">
+                            <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg text-center flex-1 min-w-[140px]">
+                                <div class="font-bold text-blue-800">LAN-A</div>
+                                <div class="text-xs text-blue-600">Users</div>
+                                <div class="text-xs font-mono mt-1">192.168.10.0/24</div>
+                            </div>
+                            <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-lg text-center flex-1 min-w-[140px]">
+                                <div class="font-bold text-emerald-800">LAN-B</div>
+                                <div class="text-xs text-emerald-600">Servers</div>
+                                <div class="text-xs font-mono mt-1">192.168.20.0/24</div>
+                            </div>
+                            <div class="bg-amber-50 border border-amber-200 p-4 rounded-lg text-center flex-1 min-w-[140px]">
+                                <div class="font-bold text-amber-800">Wi-Fi</div>
+                                <div class="text-xs text-amber-600">Guests</div>
+                                <div class="text-xs font-mono mt-1">10.10.10.0/24</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <h4 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Internal Services & Gaps</h4>
+                    
+                    <div class="mb-6">
+                        <h5 class="font-semibold text-slate-700 mb-2">Active Services</h5>
+                        <ul class="space-y-3">
+                            <li class="flex items-start">
+                                <span class="text-teal-600 mr-2 mt-1">&#9654;</span>
+                                <div>
+                                    <span class="font-bold text-slate-800">DNS Server</span>
+                                    <p class="text-sm text-slate-600 font-mono bg-slate-100 px-2 py-1 inline-block rounded mt-1">192.168.20.10</p>
+                                    <p class="text-sm text-slate-500 mt-1">Resolves <code class="text-teal-700">intranet.acme.local</code> to 192.168.20.20.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-teal-600 mr-2 mt-1">&#9654;</span>
+                                <div>
+                                    <span class="font-bold text-slate-800">HTTP Web Server</span>
+                                    <p class="text-sm text-slate-600 font-mono bg-slate-100 px-2 py-1 inline-block rounded mt-1">192.168.20.20</p>
+                                    <p class="text-sm text-slate-500 mt-1">Serves the "Hello from Acme" internal page.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h5 class="font-semibold text-amber-700 mb-2">Known Gaps / Future Work</h5>
+                        <ul class="list-disc pl-5 text-sm text-slate-600 space-y-1 marker:text-amber-500">
+                            <li>No MFA on the Wi-Fi guest portal yet.</li>
+                            <li>No log forwarding to a central server.</li>
+                            <li>IoT VLAN not yet built.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 overflow-x-auto">
+                <h4 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">IP Allocation Plan</h4>
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-600 text-sm">
+                            <th class="py-3 px-4 border-b border-slate-200">Subnet</th>
+                            <th class="py-3 px-4 border-b border-slate-200">Purpose</th>
+                            <th class="py-3 px-4 border-b border-slate-200">DHCP Status</th>
+                            <th class="py-3 px-4 border-b border-slate-200">Notes / Scope</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm">
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="py-3 px-4 border-b border-slate-100 font-mono text-blue-700">192.168.10.0/24</td>
+                            <td class="py-3 px-4 border-b border-slate-100">LAN-A users</td>
+                            <td class="py-3 px-4 border-b border-slate-100"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">Yes</span></td>
+                            <td class="py-3 px-4 border-b border-slate-100">DHCP scope .50-.200</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="py-3 px-4 border-b border-slate-100 font-mono text-emerald-700">192.168.20.0/24</td>
+                            <td class="py-3 px-4 border-b border-slate-100">LAN-B servers</td>
+                            <td class="py-3 px-4 border-b border-slate-100"><span class="bg-stone-200 text-stone-700 px-2 py-1 rounded text-xs font-bold">No (Static)</span></td>
+                            <td class="py-3 px-4 border-b border-slate-100">DNS .10, Web .20</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="py-3 px-4 border-b border-slate-100 font-mono text-amber-700">10.10.10.0/24</td>
+                            <td class="py-3 px-4 border-b border-slate-100">Wi-Fi guest</td>
+                            <td class="py-3 px-4 border-b border-slate-100"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">Yes</span></td>
+                            <td class="py-3 px-4 border-b border-slate-100">Client isolation ON</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="tab-lab1" class="hidden animate-fade-in">
+            <div class="mb-8">
+                <div class="flex justify-between items-start flex-wrap gap-4">
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-2">Exercise 1: Nmap / Zenmap Lab</h3>
+                        <p class="text-slate-600 leading-relaxed max-w-3xl">
+                            Goal: scan only your own GNS3 topology, identify hosts, open ports, and services; cross-reference findings to your IP plan. You scan only the project running on YOUR laptop. Nothing else.
+                        </p>
+                    </div>
+                    <div class="bg-amber-100 text-amber-800 px-4 py-2 rounded border border-amber-200 text-sm font-bold shadow-sm">
+                        Time Budget: 1h class + 1h home
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8 mb-8">
+                <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <h4 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Setup Checklist</h4>
+                    <p class="text-xs text-slate-500 mb-4 uppercase tracking-wide font-bold">Fix failures before proceeding</p>
+                    <div class="space-y-3" id="checklist-container">
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <h4 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Interactive Scan Simulator</h4>
+                    <p class="text-sm text-slate-600 mb-4">Select a scanning technique to simulate its execution against the <strong>192.168.10.0/24</strong> subnet and observe the terminal output.</p>
+                    
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <button onclick="runSim('ping')" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded text-sm font-mono transition-colors">nmap -sn</button>
+                        <button onclick="runSim('service')" class="bg-teal-700 hover:bg-teal-600 text-white px-4 py-2 rounded text-sm font-mono transition-colors">nmap -sV -T4 --top-ports 100</button>
+                        <button onclick="runSim('loud')" class="bg-red-800 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-mono transition-colors">nmap -T5 -p-</button>
+                    </div>
+
+                    <div class="terminal-bg rounded-lg p-4 h-64 overflow-y-auto shadow-inner">
+                        <pre id="terminal-output" class="terminal-text text-sm whitespace-pre-wrap">user@kali:~$ Waiting for command input...</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <h4 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Scan Intensity Impact</h4>
+                    <p class="text-sm text-slate-600 mb-4">Different scan types generate drastically different network traffic volumes. This chart illustrates estimated packet counts per host based on scan flags.</p>
+                    <div class="chart-container">
+                        <canvas id="packetChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 flex flex-col h-full">
+                    <h4 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Self-Check Questions</h4>
+                    <p class="text-sm text-slate-600 mb-4">Test your understanding of Nmap syntax and networking principles. Click a question to reveal the answer.</p>
+                    <div class="space-y-3 flex-grow" id="qna-container-1">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                <h4 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Alternative Open-Source Discovery Tools</h4>
+                <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div class="border border-slate-200 p-4 rounded-lg hover:shadow-md transition-shadow">
+                        <div class="font-bold text-teal-700 mb-1">Masscan</div>
+                        <p class="text-xs text-slate-600">Crazy-fast TCP scanner; can sweep the entire internet in 6 minutes (do not).</p>
+                    </div>
+                    <div class="border border-slate-200 p-4 rounded-lg hover:shadow-md transition-shadow">
+                        <div class="font-bold text-teal-700 mb-1">RustScan</div>
+                        <p class="text-xs text-slate-600">Modern Rust wrapper over Nmap; finds open ports in seconds, feeds to Nmap.</p>
+                    </div>
+                    <div class="border border-slate-200 p-4 rounded-lg hover:shadow-md transition-shadow">
+                        <div class="font-bold text-teal-700 mb-1">Angry IP</div>
+                        <p class="text-xs text-slate-600">Friendly GUI; great for absolute beginners doing host discovery only.</p>
+                    </div>
+                    <div class="border border-slate-200 p-4 rounded-lg hover:shadow-md transition-shadow">
+                        <div class="font-bold text-teal-700 mb-1">netdiscover</div>
+                        <p class="text-xs text-slate-600">Pure ARP-based discovery — great for finding hosts on switches that block ICMP.</p>
+                    </div>
+                    <div class="border border-slate-200 p-4 rounded-lg hover:shadow-md transition-shadow">
+                        <div class="font-bold text-teal-700 mb-1">arp-scan</div>
+                        <p class="text-xs text-slate-600">Same idea, smaller scope; gold standard for "what is on my LAN right now".</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-lab2" class="hidden animate-fade-in">
+            <div class="mb-8">
+                <div class="flex justify-between items-start flex-wrap gap-4">
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-2">Exercise 2: Project Stage 6 — Final Integration</h3>
+                        <p class="text-slate-600 leading-relaxed max-w-3xl">
+                            Goal: lock down the project. Add basic firewall rules on the router, walk a peer through your topology, hand in the final topology + IP plan + documentation.
+                        </p>
+                    </div>
+                    <div class="bg-amber-100 text-amber-800 px-4 py-2 rounded border border-amber-200 text-sm font-bold shadow-sm">
+                        Time Budget: 1h class + 1h home
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-12 gap-8 mb-8">
+                
+                <div class="lg:col-span-4 bg-white p-6 rounded-xl shadow-sm border border-stone-200 h-full">
+                    <h4 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">"Done" Criteria Checklist</h4>
+                    <ul class="space-y-4 text-sm text-slate-700">
+                        <li class="flex items-center"><span class="text-green-600 text-lg mr-3">&#10004;</span> Two LAN segments</li>
+                        <li class="flex items-center"><span class="text-green-600 text-lg mr-3">&#10004;</span> DHCP scope & static addressing</li>
+                        <li class="flex items-center"><span class="text-green-600 text-lg mr-3">&#10004;</span> DNS + HTTP internal service</li>
+                        <li class="flex items-center"><span class="text-green-600 text-lg mr-3">&#10004;</span> Wi-Fi access segment</li>
+                        <li class="flex items-center"><span class="text-stone-300 text-lg mr-3 font-bold">&#9711;</span> Basic firewall on WAN</li>
+                        <li class="flex items-center"><span class="text-stone-300 text-lg mr-3 font-bold">&#9711;</span> 1-page network documentation</li>
+                    </ul>
+                </div>
+
+                <div class="lg:col-span-8 bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <h4 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Interactive ACL Explainer</h4>
+                    <p class="text-sm text-slate-600 mb-4">Click on any line of the Cisco configuration block below to reveal the rationale behind that specific firewall rule.</p>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-slate-800 text-slate-200 p-4 rounded-lg font-mono text-sm shadow-inner overflow-hidden" id="acl-code-block">
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-6 flex flex-col justify-center min-h-[200px]" id="acl-explanation-box">
+                            <div class="text-center text-slate-400 italic">Select a line of code on the left to view its explanation.</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 h-full">
+                    <h4 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Self-Check Questions</h4>
+                    <div class="space-y-3" id="qna-container-2">
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <h4 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Alternative Open-Source Firewall Tools</h4>
+                    <p class="text-sm text-slate-600 mb-4">Beyond Cisco IOS ACLs, these platforms are industry standards for routing and security.</p>
+                    <div class="space-y-3">
+                        <div class="flex items-start border-b border-slate-100 pb-3">
+                            <div class="w-24 font-bold text-slate-800 text-sm mt-1">pfSense / OPNsense</div>
+                            <div class="flex-1 text-sm text-slate-600 ml-4">Full FreeBSD-based firewall distros with web UIs. OPNsense offers faster release cycles and stricter defaults. Replaces the Cisco router for SoHo.</div>
+                        </div>
+                        <div class="flex items-start border-b border-slate-100 pb-3">
+                            <div class="w-24 font-bold text-slate-800 text-sm mt-1">VyOS</div>
+                            <div class="flex-1 text-sm text-slate-600 ml-4">An open-source router OS with Cisco-style CLI — perfect if you liked the ACL syntax today.</div>
+                        </div>
+                        <div class="flex items-start border-b border-slate-100 pb-3">
+                            <div class="w-24 font-bold text-slate-800 text-sm mt-1">OpenWrt</div>
+                            <div class="flex-1 text-sm text-slate-600 ml-4">Open-source router firmware that runs on real consumer hardware. Great for hardening home networks.</div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="w-24 font-bold text-slate-800 text-sm mt-1">Suricata / Zeek</div>
+                            <div class="flex-1 text-sm text-slate-600 ml-4">Network analysis and IDS/IPS frameworks. They sit next to the firewall to watch for malicious patterns and generate rich logs.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-800 text-slate-400 py-6 text-center mt-auto">
+        <p class="text-sm">Cyber.SoHo Educational Hub &copy; 2026 — ALL Rights Reserved.</p>
+        <p class="text-xs mt-2">Next Recommended Course: CCNA — Introduction to Networks (ITN)</p>
+    </footer>
+
+    <script>
+        const tabs = ['arch', 'lab1', 'lab2'];
+
+        function switchTab(selectedTab) {
+            tabs.forEach(tab => {
+                const content = document.getElementById('tab-' + tab);
+                const btn = document.getElementById('tab-btn-' + tab);
+                if (tab === selectedTab) {
+                    content.classList.remove('hidden');
+                    btn.className = 'tab-active pb-3 px-2 transition-colors whitespace-nowrap';
+                } else {
+                    content.classList.add('hidden');
+                    btn.className = 'tab-inactive pb-3 px-2 transition-colors whitespace-nowrap';
+                }
+            });
+            if(selectedTab === 'lab1' && !window.chartInitialized) {
+                initChart();
+                window.chartInitialized = true;
+            }
+        }
+
+        const checklistItems = [
+            { task: "Nmap installed on the host", verify: "nmap --version" },
+            { task: "Zenmap GUI installed", verify: "sudo apt install zenmap or Windows installer" },
+            { task: "GNS3 project from Day 05 running", verify: "Start/Resume all nodes" },
+            { task: "GNS3 cloud node bridged to host LAN", verify: "Edit > Preferences > Cloud nodes" },
+            { task: "IP plan PDF/spreadsheet ready", verify: "Cross-check against Day 04 artifact" },
+            { task: "Wireshark open in background", verify: "Ready to capture packets" }
+        ];
+
+        function renderChecklist() {
+            const container = document.getElementById('checklist-container');
+            checklistItems.forEach((item, index) => {
+                container.innerHTML += `
+                    <label class="flex items-start cursor-pointer group">
+                        <input type="checkbox" class="mt-1 w-4 h-4 text-teal-600 bg-stone-100 border-stone-300 rounded focus:ring-teal-500">
+                        <div class="ml-3">
+                            <span class="block text-sm font-medium text-slate-700 group-hover:text-teal-700 transition-colors">${item.task}</span>
+                            <span class="block text-xs text-slate-500 font-mono mt-0.5">${item.verify}</span>
+                        </div>
+                    </label>
+                `;
+            });
+        }
+
+        const terminalOutput = document.getElementById('terminal-output');
+        const simData = {
+            ping: `user@kali:~$ nmap -sn 192.168.10.0/24
+Starting Nmap 7.94 ( https://nmap.org )
+Nmap scan report for 192.168.10.1
+Host is up (0.0010s latency).
+Nmap scan report for 192.168.10.50
+Host is up (0.0020s latency).
+Nmap scan report for 192.168.10.105
+Host is up (0.0025s latency).
+Nmap done: 256 IP addresses (3 hosts up) scanned in 2.10 seconds`,
+            service: `user@kali:~$ nmap -sV -T4 --top-ports 100 192.168.10.0/24
+Starting Nmap 7.94 ( https://nmap.org )
+Nmap scan report for 192.168.10.1
+Host is up (0.0010s latency).
+Not shown: 99 closed tcp ports
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     Cisco IOS sshd 1.25
+
+Nmap scan report for 192.168.10.50
+Host is up (0.0020s latency).
+Not shown: 100 closed tcp ports
+
+Nmap scan report for 192.168.10.105
+Host is up (0.0025s latency).
+Not shown: 100 closed tcp ports
+
+Service detection performed. Please report any incorrect results.
+Nmap done: 256 IP addresses (3 hosts up) scanned in 12.45 seconds`,
+            loud: `user@kali:~$ nmap -T5 -p- 192.168.10.0/24
+Starting Nmap 7.94 ( https://nmap.org )
+Warning: -T5 is very aggressive and may crash targets or drop packets.
+Nmap scan report for 192.168.10.1
+Not shown: 65534 closed tcp ports
+PORT   STATE SERVICE
+22/tcp open  ssh
+...
+[Wireshark warning: 100,000+ packets captured]
+Nmap done: 256 IP addresses (3 hosts up) scanned in 45.12 seconds`
+        };
+
+        function runSim(type) {
+            terminalOutput.innerHTML = '<span class="text-slate-500">Executing command...</span>';
+            setTimeout(() => {
+                terminalOutput.textContent = simData[type];
+            }, 600);
+        }
+
+        const qna1 = [
+            { q: "Why is -sn faster than -sV?", a: "-sn only sends host-discovery probes (ICMP / TCP-SYN to a few ports); -sV actually probes services and reads banners on every open port — far more packets." },
+            { q: "If Nmap reports a port as 'filtered', what does that mean?", a: "Nmap got no answer at all. A device between you and the target dropped the packet silently — almost always a firewall." },
+            { q: "Why is running nmap -sV against an external system dangerous legally?", a: "Even a 'harmless' port scan against a system you do not own is unauthorised access under most jurisdictions, regardless of intent." },
+            { q: "Which Nmap flag scans UDP?", a: "-sU for a UDP scan. (Pair it with --top-ports because UDP scanning is slow.)" }
+        ];
+
+        const qna2 = [
+            { q: "What does 'permit tcp any any established' match?", a: "TCP packets where the ACK bit is set (or RST) — i.e. packets that belong to a connection already in flight." },
+            { q: "Why allow 'icmp echo-reply' but not all ICMP?", a: "Echo-reply is what comes back when we pinged out. Echo-request from the internet to us is unsolicited and would let scanners enumerate our hosts." },
+            { q: "If you remove 'log' on the final deny, what visibility is lost?", a: "You lose any record of who is being denied — the deny happens, but the router log won't capture the offender's IP/port to detect attacks." },
+            { q: "Where should the ACL be applied?", a: "Inbound on the WAN, because that is where untrusted traffic enters. Applying on the LAN outbound is a defence-in-depth bonus, not a substitute." }
+        ];
+
+        function renderQnA(containerId, data) {
+            const container = document.getElementById(containerId);
+            data.forEach((item, index) => {
+                const uniqueId = containerId + '-ans-' + index;
+                container.innerHTML += `
+                    <div class="border border-stone-200 rounded-lg overflow-hidden">
+                        <button onclick="document.getElementById('${uniqueId}').classList.toggle('hidden')" class="w-full text-left px-4 py-3 bg-stone-50 hover:bg-stone-100 text-sm font-bold text-slate-800 flex justify-between items-center transition-colors">
+                            <span>${item.q}</span>
+                            <span class="text-teal-600">&#9660;</span>
+                        </button>
+                        <div id="${uniqueId}" class="hidden px-4 py-3 bg-white text-sm text-slate-600 border-t border-stone-200">
+                            ${item.a}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        const aclData = [
+            { code: "ip access-list extended FROM-INTERNET", exp: "<strong>Named ACL Declaration</strong><br>Creates a new extended Access Control List named 'FROM-INTERNET'. Extended ACLs allow filtering based on protocol, source, and destination IP/ports." },
+            { code: " permit tcp any any established", exp: "<strong>Stateful TCP Return Traffic</strong><br>Allows TCP replies to connections that originated from inside the network. It checks for the ACK or RST flags. Crucial for web browsing from LAN to work." },
+            { code: " permit icmp any any echo-reply", exp: "<strong>Ping Return Traffic</strong><br>Allows ICMP echo-replies. This ensures that if an internal user pings an external server, the response can enter the network. Unsolicited external pings are still blocked." },
+            { code: " permit icmp any any unreachable", exp: "<strong>Path MTU Discovery (PMTUD)</strong><br>Allows ICMP 'Destination Unreachable' messages. This is vital so PMTUD does not break, preventing dropped connections on large HTTPS pages due to fragmentation issues." },
+            { code: " deny ip any any log", exp: "<strong>Explicit Deny with Logging</strong><br>Blocks all other traffic explicitly. The 'log' keyword ensures that the router generates a syslog message for every blocked packet, essential for intrusion detection." },
+            { code: "interface GigabitEthernet0/0", exp: "<strong>Interface Selection</strong><br>Enters configuration mode for the WAN-facing interface." },
+            { code: " ip access-group FROM-INTERNET in", exp: "<strong>ACL Application</strong><br>Applies the defined ACL to the interface in the 'inbound' direction, filtering traffic as it enters the router from the internet." }
+        ];
+
+        function renderACL() {
+            const codeBlock = document.getElementById('acl-code-block');
+            aclData.forEach((item, index) => {
+                codeBlock.innerHTML += `<div class="acl-line px-2 py-1 rounded font-mono whitespace-pre" onclick="updateAclExp(${index}, this)">${item.code}</div>`;
+            });
+        }
+
+        function updateAclExp(index, element) {
+            document.querySelectorAll('.acl-line').forEach(el => el.classList.remove('acl-line-active'));
+            element.classList.add('acl-line-active');
+            
+            const expBox = document.getElementById('acl-explanation-box');
+            expBox.innerHTML = `<div class="text-sm text-slate-700 animate-fade-in">${aclData[index].exp}</div>`;
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('packetChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Ping Sweep (-sn)', 'Service Scan (-sV, top 100)', 'Loud Scan (-T5, all ports)'],
+                    datasets: [{
+                        label: 'Est. Packets Sent per Host',
+                        data: [2, 150, 65535],
+                        backgroundColor: [
+                            'rgba(13, 148, 136, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                            'rgba(225, 29, 72, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(13, 148, 136, 1)',
+                            'rgba(245, 158, 11, 1)',
+                            'rgba(225, 29, 72, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'logarithmic',
+                            title: {
+                                display: true,
+                                text: 'Packets (Log Scale)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y + ' packets';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        window.onload = () => {
+            renderChecklist();
+            renderQnA('qna-container-1', qna1);
+            renderQnA('qna-container-2', qna2);
+            renderACL();
+        };
+    </script>
+</body>
+</html>
+
+
